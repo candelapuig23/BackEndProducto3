@@ -1,6 +1,7 @@
 @extends('layouts.app')
 
 @section('title', 'Panel de Usuario')
+@section('header', 'Panel de Usuario')
 
 @section('content')
 <div class="dashboard-container">
