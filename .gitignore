@@ -1,0 +1,23 @@
+# Dependencias y módulos que no deben subirse
+
+node_modules/
+#vendor/
+
+# Configuración sensible
+app/config/*.php
+#.env
+
+# Datos y registros locales
+db_data/
+*.log
+
+# Archivos temporales de Laravel
+/storage/logs/
+/storage/framework/cache/
+/storage/framework/sessions/
+/storage/framework/views/
+
+# Archivos innecesarios de sistema operativo o editor
+.vscode/
+.DS_Store
+Thumbs.db
