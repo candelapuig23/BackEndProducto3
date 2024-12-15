@@ -10,15 +10,24 @@ Route::post('/login', [UserController::class, 'login']);
 Route::get('/register', [UserController::class, 'showRegisterForm'])->name('register');
 Route::post('/register', [UserController::class, 'register'])->name('register');
 
-// Panel de administrador (sin middleware)
+// Panel de administrador
 Route::get('/admin/dashboard', [UserController::class, 'adminDashboard'])->name('admin.dashboard');
 
+// Funcionalidades de reservas en el panel de administrador
+Route::get('/reservations/create', [ReservationController::class, 'create'])->name('reservations.create');
+Route::post('/reservations/store', [ReservationController::class, 'store'])->name('reservations.store');
+Route::get('/reservations/{id}/edit', [ReservationController::class, 'edit'])->name('reservations.edit'); // Edición de reservas
+Route::put('/reservations/{id}', [ReservationController::class, 'update'])->name('reservations.update'); // Actualización de reservas
+Route::delete('/reservations/{id}', [ReservationController::class, 'destroy'])->name('reservations.destroy'); // Eliminación de reservas
 
 // Ruta para obtener los trayectos (JSON)
 Route::get('/admin/trayectos', [ReservationController::class, 'getTrayectos'])->name('admin.trayectos');
 
-// Ruta para editar perfil
-Route::get('/profile/edit', [UserController::class, 'editProfile'])->name('profile.edit');
+// Ruta para mostrar el formulario de edición yy editarlo
+Route::get('/profile/edit', [UserController::class, 'editProfile'])->middleware('auth')->name('profile.edit');
+Route::put('/profile/update/{id}', [UserController::class, 'updateProfile'])->middleware('auth')->name('users.update');
+
+
 
 // Ruta para cerrar sesión
 Route::post('/logout', function () {
@@ -26,14 +35,8 @@ Route::post('/logout', function () {
     return redirect('/login');
 })->name('logout');
 
-// Panel de usuario (sin middleware)
+// Panel de usuario
 Route::get('/user/dashboard', [UserController::class, 'userDashboard'])->name('user.dashboard');
-
-// Funcionalidades de reservas (sin middleware)
-Route::get('/reservations/create', [ReservationController::class, 'create'])->name('reservations.create');
-Route::post('/reservations/store', [ReservationController::class, 'store'])->name('reservations.store');
-Route::get('/reservations/{id}/edit', [ReservationController::class, 'edit'])->name('reservations.edit');
-Route::delete('/reservations/{id}', [ReservationController::class, 'cancel'])->name('reservations.cancel');
 
 // Página principal
 Route::get('/', function () {
@@ -45,15 +48,11 @@ Route::get('/home', function () {
     return view('home');
 });
 
+// Rutas adicionales que puedes requerir
+Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index'); // Listado de reservas
+Route::get('/reservations/{id}', [ReservationController::class, 'show'])->name('reservations.show'); // Detalles de una reserva
 
-// Nuevas rutas adicionales que pudiste requerir
-Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index');
-Route::get('/reservations/{id}', [ReservationController::class, 'show'])->name('reservations.show');
-Route::put('/reservations/{id}', [ReservationController::class, 'update'])->name('reservations.update');
-
-
-// Ruta para el registro de hoteles
+// Ruta para el registro de hoteles (si aplica)
 Route::get('/register/hotel', function () {
-    return view('register_hotel'); // Asegúrate de tener esta vista
+    return view('register_hotel'); // Asegúrate de tener esta vista creada
 })->name('register.hotel');
-

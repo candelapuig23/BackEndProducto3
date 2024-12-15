@@ -173,28 +173,56 @@ public function register(Request $request)
     }
 
     // Actualizar perfil del usuario
-    public function updateUserProfile(Request $request, $id)
-    {
+  public function updateProfile(Request $request, $id)
+{
+    \Log::info('Iniciando actualización de perfil', ['id' => $id]);
+
+    // Buscar el usuario en la base de datos
+    $user = TransferViajeroAdmin::find($id);
+
+    if (!$user) {
+        \Log::error('Usuario no encontrado en la base de datos.', ['id' => $id]);
+        return redirect()->route('profile.edit')->withErrors(['error' => 'Usuario no encontrado.']);
+    }
+
+    \Log::info('Usuario encontrado para actualizar.', ['id' => $user->id_viajero_admin, 'nombre' => $user->nombre]);
+
+    // Validar los datos del formulario
+    try {
         $validated = $request->validate([
-            'nombre' => 'required|string|max:255',
-            'email' => 'required|email|unique:transfer_viajeros,email,' . $id,
-            'password' => 'nullable|string|min:6',
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:transfer_viajeros_admin,email,' . $id . ',id_viajero_admin',
+            'password' => 'nullable|min:6|confirmed',
         ]);
+        \Log::info('Validación exitosa.', ['validated' => $validated]);
+    } catch (\Illuminate\Validation\ValidationException $e) {
+        \Log::error('Error de validación.', ['errors' => $e->errors()]);
+        return redirect()->route('profile.edit')->withErrors($e->errors());
+    }
 
-        $user = TransferViajero::find($id);
+    // Asignar los nuevos valores
+    try {
+        $user->nombre = $validated['name'];
+        $user->email = $validated['email'];
 
-        if (!$user) {
-            return response()->json(['message' => 'Usuario no encontrado'], 404);
+        if (!empty($validated['password'])) {
+            $user->password = Hash::make($validated['password']);
+            \Log::info('Contraseña actualizada correctamente.');
+        } else {
+            \Log::info('No se actualizó la contraseña (campo vacío).');
         }
 
-        $user->update(array_filter([
-            'nombre' => $validated['nombre'],
-            'email' => $validated['email'],
-            'password' => $validated['password'] ? bcrypt($validated['password']) : null,
-        ]));
-
-        return response()->json(['message' => 'Perfil actualizado correctamente'], 200);
+        // Guardar los cambios
+        $user->save();
+        \Log::info('Perfil actualizado exitosamente.', ['id' => $user->id_viajero_admin]);
+    } catch (\Exception $e) {
+        \Log::error('Error al guardar los datos en la base de datos.', ['error' => $e->getMessage()]);
+        return redirect()->route('profile.edit')->withErrors(['error' => 'No se pudo actualizar el perfil.']);
     }
+
+    // Confirmar que la actualización fue exitosa
+   return redirect()->route('admin.dashboard')->with('success', 'Perfil actualizado correctamente.');
+}
 
     // Listar todos los usuarios
     public function listUsers()
@@ -205,11 +233,24 @@ public function register(Request $request)
 
     public function editProfile()
 {
-    // Cargar los datos del perfil del usuario autenticado
-    $user = auth()->user();
+    // Obtener al administrador autenticado
+    $user = TransferViajeroAdmin::where('email', 'prueba@gmail.com')->first();
 
-    return view('profile.edit', compact('user'));
+    // Verificar si el usuario tiene un ID válido
+    if ($user && $user->id_viajero_admin) {
+        \Log::info('Usuario cargado para edición de perfil:', ['id' => $user->id_viajero_admin, 'nombre' => $user->nombre]);
+        return view('profile.edit', ['user' => $user]);
+    } else {
+        \Log::error('No se pudo cargar el perfil del usuario.');
+        return redirect()->route('login')->withErrors(['error' => 'No se pudo cargar el perfil del usuario.']);
+    }
 }
+
+
+
+
+
+
 
  // Mostrar el formulario de login
     public function showLoginForm()
@@ -253,12 +294,24 @@ public function userDashboard()
 
 public function adminDashboard()
 {
-    // Obtener todas las reservas
     $reservations = TransferReserva::with(['hotel', 'tipoReserva', 'vehiculo'])->get();
 
-    // Retornar la vista del panel de administrador con las reservas
+    foreach ($reservations as $reservation) {
+        \Log::info('Reserva cargada:', [
+            'ID' => $reservation->id_reserva,
+            'Hotel' => $reservation->hotel ? $reservation->hotel->usuario : 'NULL',
+            'Tipo de Trayecto' => $reservation->tipoReserva ? $reservation->tipoReserva->descripcion : 'NULL',
+            'Vehículo' => $reservation->vehiculo ? $reservation->vehiculo->descripcion : 'NULL'
+        ]);
+    }
+
     return view('admin.admin_dashboard', compact('reservations'));
 }
+
+
+
+
+
 
 
 }

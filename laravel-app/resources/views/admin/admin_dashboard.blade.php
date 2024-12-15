@@ -29,23 +29,30 @@
             </thead>
             <tbody>
                 @foreach ($reservations as $reservation)
-                <tr>
-                    <td>{{ $reservation->id_reserva }}</td>
-                    <td>{{ $reservation->localizador }}</td>
-                    <td>{{ $reservation->email_cliente }}</td>
-                    <td>{{ $reservation->num_viajeros }}</td>
-                    <td>{{ $reservation->fecha_reserva }}</td>
-                    <td>{{ $reservation->fecha_entrada }}</td>
-                    <td>{{ $reservation->tipo_reserva }}</td>
-                    <td>{{ $reservation->vehiculo }}</td>
-                    <td>{{ $reservation->hotel->nombre ?? 'N/A' }}</td>
-                    <td>
-                        <a href="{{ route('reservations.edit', $reservation->id_reserva) }}">Editar</a> |
-                        <a href="{{ route('reservations.cancel', $reservation->id_reserva) }}">Cancelar</a>
+<tr>
+    <td>{{ $reservation->id_reserva }}</td>
+    <td>{{ $reservation->localizador }}</td>
+    <td>{{ $reservation->email_cliente }}</td>
+    <td>{{ $reservation->num_viajeros }}</td>
+    <td>{{ $reservation->fecha_reserva }}</td>
+    <td>{{ $reservation->fecha_entrada }}</td>
+   <td>{{ $reservation->tipoReserva ? $reservation->tipoReserva->descripcion : 'N/A' }}</td>
+    <td>{{ $reservation->vehiculo ? $reservation->vehiculo->descripcion : 'N/A' }}</td>
+    <td>{{ $reservation->hotel ? $reservation->hotel->usuario : 'N/A' }}</td>
 
-                    </td>
-                </tr>
-                @endforeach
+
+    <td>
+        <a href="{{ route('reservations.edit', $reservation->id_reserva) }}">Editar</a>
+        |
+        <form action="{{ route('reservations.destroy', $reservation->id_reserva) }}" method="POST" style="display: inline;">
+            @csrf
+            @method('DELETE')
+            <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">Cancelar</button>
+        </form>
+    </td>
+</tr>
+@endforeach
+
             </tbody>
         </table>
     @endif
@@ -66,14 +73,11 @@
             <li><a href="{{ route('reservations.create') }}">Hacer nueva reserva</a></li>
             <li><a href="{{ route('profile.edit') }}">Editar Perfil</a></li>
             <li>
-    <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-        @csrf
-        <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">
-            Cerrar sesión
-        </button>
-    </form>
-</li>
-
+                <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">Cerrar sesión</button>
+                </form>
+            </li>
         </ul>
     </div>
 </div>
