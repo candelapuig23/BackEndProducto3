@@ -291,7 +291,7 @@ public function userDashboard()
 
     return view('user_dashboard', compact('user', 'reservations'));
 }
-
+//metodo para mostrar la informacion de las reservas en el panel de admin
 public function adminDashboard()
 {
     $reservations = TransferReserva::with(['hotel', 'tipoReserva', 'vehiculo'])->get();
