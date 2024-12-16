@@ -84,17 +84,6 @@ class ReservationController extends Controller
         return redirect()->route('reservations.create')->with('success', 'Reserva creada correctamente.');
     }
 
-    public function adminDashboard()
-{
-    \Log::info("El método adminDashboard ha sido llamado correctamente.");
-
-    $reservations = TransferReserva::with(['hotel', 'tipoReserva', 'vehiculo'])->get();
-
-    dd($reservations); // Esto debería mostrar los datos y detener la ejecución.
-    return view('admin.dashboard', compact('reservations'));
-}
-
-
 
 
     public function edit($id)
@@ -186,13 +175,39 @@ class ReservationController extends Controller
 
     public function getTrayectos()
 {
-    // Obtiene las reservas necesarias para el calendario
-    $trayectos = TransferReserva::select('id_reserva', 'fecha_entrada', 'hora_entrada', 'id_destino')
-        ->with('destino:id_zona,descripcion') // Relación con destino
+    // Obtiene las reservas necesarias para el calendario con todas las relaciones necesarias
+    $trayectos = TransferReserva::select(
+            'id_reserva',
+            'fecha_entrada',
+            'hora_entrada',
+            'localizador',
+            'id_tipo_reserva',
+            'id_vehiculo',
+            'id_hotel'
+        )
+        ->with([
+            'tipoReserva:id_tipo_reserva,descripcion',
+            'vehiculo:id_vehiculo,descripcion',
+            'hotel:id_hotel,usuario'
+        ])
         ->get();
 
-    return response()->json($trayectos);
+    // Modificar la estructura de los datos para simplificar la respuesta JSON
+    $formattedTrayectos = $trayectos->map(function ($trayecto) {
+        return [
+            'id_reserva' => $trayecto->id_reserva,
+            'fecha_entrada' => $trayecto->fecha_entrada,
+            'hora_entrada' => $trayecto->hora_entrada,
+            'localizador' => $trayecto->localizador,
+            'tipo_trayecto' => $trayecto->tipoReserva ? $trayecto->tipoReserva->descripcion : 'N/A',
+            'vehiculo' => $trayecto->vehiculo ? $trayecto->vehiculo->descripcion : 'N/A',
+            'hotel' => $trayecto->hotel ? $trayecto->hotel->usuario : 'N/A'
+        ];
+    });
+
+    return response()->json($formattedTrayectos);
 }
+
 
 
 }

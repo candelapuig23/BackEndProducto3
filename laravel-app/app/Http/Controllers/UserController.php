@@ -308,6 +308,28 @@ public function adminDashboard()
     return view('admin.admin_dashboard', compact('reservations'));
 }
 
+public function getTrayectos(Request $request)
+{
+    $vista = $request->query('vista', 'mensual'); // mensual, semanal, diaria
+    $fecha = $request->query('fecha', now());
+
+    $query = TransferReserva::with(['hotel', 'tipoReserva', 'vehiculo']);
+
+    if ($vista === 'mensual') {
+        $inicioMes = Carbon::parse($fecha)->startOfMonth();
+        $finMes = Carbon::parse($fecha)->endOfMonth();
+        $query->whereBetween('fecha_entrada', [$inicioMes, $finMes]);
+    } elseif ($vista === 'semanal') {
+        $inicioSemana = Carbon::parse($fecha)->startOfWeek();
+        $finSemana = Carbon::parse($fecha)->endOfWeek();
+        $query->whereBetween('fecha_entrada', [$inicioSemana, $finSemana]);
+    } elseif ($vista === 'diaria') {
+        $query->whereDate('fecha_entrada', Carbon::parse($fecha));
+    }
+
+    $trayectos = $query->get();
+    return response()->json($trayectos);
+}
 
 
 

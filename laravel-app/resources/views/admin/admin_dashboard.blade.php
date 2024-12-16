@@ -29,30 +29,27 @@
             </thead>
             <tbody>
                 @foreach ($reservations as $reservation)
-<tr>
-    <td>{{ $reservation->id_reserva }}</td>
-    <td>{{ $reservation->localizador }}</td>
-    <td>{{ $reservation->email_cliente }}</td>
-    <td>{{ $reservation->num_viajeros }}</td>
-    <td>{{ $reservation->fecha_reserva }}</td>
-    <td>{{ $reservation->fecha_entrada }}</td>
-   <td>{{ $reservation->tipoReserva ? $reservation->tipoReserva->descripcion : 'N/A' }}</td>
-    <td>{{ $reservation->vehiculo ? $reservation->vehiculo->descripcion : 'N/A' }}</td>
-    <td>{{ $reservation->hotel ? $reservation->hotel->usuario : 'N/A' }}</td>
-
-
-    <td>
-        <a href="{{ route('reservations.edit', $reservation->id_reserva) }}">Editar</a>
-        |
-        <form action="{{ route('reservations.destroy', $reservation->id_reserva) }}" method="POST" style="display: inline;">
-            @csrf
-            @method('DELETE')
-            <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">Cancelar</button>
-        </form>
-    </td>
-</tr>
-@endforeach
-
+                <tr>
+                    <td>{{ $reservation->id_reserva }}</td>
+                    <td>{{ $reservation->localizador }}</td>
+                    <td>{{ $reservation->email_cliente }}</td>
+                    <td>{{ $reservation->num_viajeros }}</td>
+                    <td>{{ $reservation->fecha_reserva }}</td>
+                    <td>{{ $reservation->fecha_entrada }}</td>
+                    <td>{{ $reservation->tipoReserva ? $reservation->tipoReserva->descripcion : 'N/A' }}</td>
+                    <td>{{ $reservation->vehiculo ? $reservation->vehiculo->descripcion : 'N/A' }}</td>
+                    <td>{{ $reservation->hotel ? $reservation->hotel->usuario : 'N/A' }}</td>
+                    <td>
+                        <a href="{{ route('reservations.edit', $reservation->id_reserva) }}">Editar</a>
+                        |
+                        <form action="{{ route('reservations.destroy', $reservation->id_reserva) }}" method="POST" style="display: inline;">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">Cancelar</button>
+                        </form>
+                    </td>
+                </tr>
+                @endforeach
             </tbody>
         </table>
     @endif
@@ -65,73 +62,195 @@
     </div>
 
     <div id="calendar" class="calendar"></div>
+    <div id="nav-buttons" style="margin-top: 10px;"></div>
     <div id="eventos"></div>
 
-    <h3>Opciones</h3>
-    <div class="dashboard-options">
-        <ul>
-            <li><a href="{{ route('reservations.create') }}">Hacer nueva reserva</a></li>
-            <li><a href="{{ route('profile.edit') }}">Editar Perfil</a></li>
-            <li>
-                <form action="{{ route('logout') }}" method="POST" style="display: inline;">
-                    @csrf
-                    <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">Cerrar sesión</button>
-                </form>
-            </li>
-        </ul>
+    <!-- Modal para mostrar detalles de las reservas -->
+    <div id="modalReservas" style="display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -20%); background: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); z-index: 1000;">
+        <div>
+            <span onclick="cerrarModal()" style="cursor: pointer; float: right;">&times;</span>
+            <h4 id="modalTitulo"></h4>
+            <ul id="modalContenido"></ul>
+        </div>
     </div>
-</div>
 
-<script>
-    let mesActual, anioActual, trayectos, vistaActual, fechaSeleccionada;
+    <script>
+        let mesActual, anioActual, trayectos, vistaActual, fechaSeleccionada;
 
-    document.addEventListener('DOMContentLoaded', function () {
-        mesActual = new Date().getMonth() + 1;
-        anioActual = new Date().getFullYear();
-        vistaActual = 'mensual'; // La vista predeterminada es mensual
+        document.addEventListener('DOMContentLoaded', function () {
+            mesActual = new Date().getMonth();
+            anioActual = new Date().getFullYear();
+            fechaSeleccionada = new Date();
+            vistaActual = 'mensual'; 
 
-        fetch('{{ route('admin.trayectos') }}')
-            .then(response => response.json())
-            .then(data => {
-                trayectos = data;
-                generarCalendario(vistaActual, mesActual, anioActual);
-            })
-            .catch(error => console.error('Error al cargar los trayectos:', error));
-    });
-
-    function cambiarVista(vista) {
-        vistaActual = vista;
-        generarCalendario(vistaActual, mesActual, anioActual);
-    }
-
-    function generarCalendario(vista, mes, anio) {
-        if (vista === 'mensual') {
-            generarVistaMensual(mes, anio);
-        }
-    }
-
-    function generarVistaMensual(mes, anio) {
-        const diasEnMes = new Date(anio, mes, 0).getDate();
-        const primerDiaSemana = new Date(anio, mes - 1, 1).getDay();
-        let html = `<table><thead><tr>`;
-        ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'].forEach(dia => {
-            html += `<th>${dia}</th>`;
+            cargarTrayectos();
         });
-        html += `</tr></thead><tbody><tr>`;
 
-        for (let i = 1; i < primerDiaSemana; i++) {
-            html += `<td></td>`;
+        function cargarTrayectos() {
+            fetch('{{ route('admin.trayectos') }}')
+                .then(response => response.json())
+                .then(data => {
+                    trayectos = data;
+                    generarCalendario(vistaActual);
+                })
+                .catch(error => console.error('Error al cargar los trayectos:', error));
         }
 
-        for (let dia = 1; dia <= diasEnMes; dia++) {
-            html += `<td>${dia}</td>`;
-            if ((dia + primerDiaSemana - 1) % 7 === 0) {
-                html += `</tr><tr>`;
+        function cambiarVista(vista) {
+            vistaActual = vista;
+            generarCalendario(vistaActual);
+        }
+
+        function generarCalendario(vista) {
+            if (vista === 'mensual') {
+                generarVistaMensual();
+                mostrarBotonesNavegacion('mensual');
+            } else if (vista === 'semanal') {
+                generarVistaSemanal();
+                mostrarBotonesNavegacion('semanal');
+            } else if (vista === 'diaria') {
+                generarVistaDiaria();
+                mostrarBotonesNavegacion('diaria');
             }
         }
 
-        html += `</tr></tbody></table>`;
-        document.getElementById('calendar').innerHTML = html;
+        function generarVistaMensual() {
+    const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
+    const primerDiaSemana = new Date(anioActual, mesActual, 1).getDay();
+    const nombreMes = new Date(anioActual, mesActual).toLocaleString('default', { month: 'long' });
+
+    let html = `<h4>${nombreMes} ${anioActual}</h4><table><tr>`;
+
+    for (let i = 0; i < primerDiaSemana; i++) {
+        html += `<td></td>`;
     }
-</script>
+
+    for (let dia = 1; dia <= diasEnMes; dia++) {
+        const fecha = new Date(anioActual, mesActual, dia);
+        const reservasDelDia = trayectos.filter(trayecto => {
+            let fechaTrayecto = new Date(trayecto.fecha_entrada);
+            return fechaTrayecto.toDateString() === fecha.toDateString();
+        });
+
+        let indicadorReservas = reservasDelDia.length > 0 ? `<span style="color: red;">●</span>` : '';
+        html += `<td onclick="mostrarReservasDelDia(${anioActual}, ${mesActual + 1}, ${dia})">
+                    ${dia} ${indicadorReservas}
+                 </td>`;
+        if ((dia + primerDiaSemana) % 7 === 0) html += `</tr><tr>`;
+    }
+
+    html += `</tr></table>`;
+    document.getElementById('calendar').innerHTML = html;
+}
+
+
+        function generarVistaSemanal() {
+    let hoy = new Date(fechaSeleccionada);
+    let inicioSemana = new Date(hoy);
+    inicioSemana.setDate(hoy.getDate() - hoy.getDay() + 1); // Lunes de la semana
+
+    let finSemana = new Date(inicioSemana);
+    finSemana.setDate(inicioSemana.getDate() + 6); // Domingo de la semana
+
+    let html = `<h4>Semana del ${inicioSemana.toDateString()} al ${finSemana.toDateString()}</h4><table><tr>`;
+
+    for (let i = 0; i < 7; i++) {
+        let dia = new Date(inicioSemana);
+        dia.setDate(inicioSemana.getDate() + i);
+
+        // Filtrar reservas para el día actual
+        let reservasDelDia = trayectos.filter(trayecto => {
+            let fechaTrayecto = new Date(trayecto.fecha_entrada);
+            return fechaTrayecto.toDateString() === dia.toDateString();
+        });
+
+        // Mostrar indicador si hay reservas
+        let indicadorReservas = reservasDelDia.length > 0 ? `<span style="color: red;">●</span>` : '';
+        html += `<td onclick="mostrarReservasDelDia(${dia.getFullYear()}, ${dia.getMonth() + 1}, ${dia.getDate()})">
+                    ${dia.toDateString()} ${indicadorReservas}
+                 </td>`;
+    }
+
+    html += `</tr></table>`;
+    document.getElementById('calendar').innerHTML = html;
+}
+
+
+        function generarVistaDiaria() {
+    let dia = new Date(fechaSeleccionada);
+    const diaStr = dia.toDateString();
+
+    let reservasDelDia = trayectos.filter(trayecto => {
+        let fechaTrayecto = new Date(trayecto.fecha_entrada);
+        return fechaTrayecto.toDateString() === diaStr;
+    });
+
+    let html = `<h4>Reservas del ${diaStr}</h4><ul>`;
+    if (reservasDelDia.length === 0) {
+        html += `<li>No hay reservas para este día</li>`;
+    } else {
+        reservasDelDia.forEach(reserva => {
+            html += `<li>${reserva.localizador} - ${reserva.tipo_trayecto} - ${reserva.vehiculo} - ${reserva.hotel}</li>`;
+        });
+    }
+    html += `</ul>`;
+    document.getElementById('calendar').innerHTML = html;
+}
+
+
+        function mostrarBotonesNavegacion(vista) {
+            let html = '';
+            if (vista === 'mensual') {
+                html = `<button onclick="mesActual--; generarVistaMensual()">← Mes Anterior</button>
+                        <button onclick="mesActual++; generarVistaMensual()">Mes Siguiente →</button>`;
+            } else if (vista === 'semanal') {
+                html = `<button onclick="fechaSeleccionada.setDate(fechaSeleccionada.getDate() - 7); generarVistaSemanal()">← Semana Anterior</button>
+                        <button onclick="fechaSeleccionada.setDate(fechaSeleccionada.getDate() + 7); generarVistaSemanal()">Semana Siguiente →</button>`;
+            } else if (vista === 'diaria') {
+                html = `<button onclick="fechaSeleccionada.setDate(fechaSeleccionada.getDate() - 1); generarVistaDiaria()">← Día Anterior</button>
+                        <button onclick="fechaSeleccionada.setDate(fechaSeleccionada.getDate() + 1); generarVistaDiaria()">Día Siguiente →</button>`;
+            }
+            document.getElementById('nav-buttons').innerHTML = html;
+        }
+
+        function mostrarReservasDelDia(anio, mes, dia) {
+            fechaSeleccionada = new Date(anio, mes - 1, dia);
+            const diaStr = fechaSeleccionada.toDateString();
+
+            let reservasDelDia = trayectos.filter(trayecto => {
+                let fechaTrayecto = new Date(trayecto.fecha_entrada);
+                return fechaTrayecto.toDateString() === diaStr;
+            });
+
+            const modalTitulo = document.getElementById('modalTitulo');
+            const modalContenido = document.getElementById('modalContenido');
+
+            modalTitulo.textContent = `Reservas del ${diaStr}`;
+            modalContenido.innerHTML = '';
+
+            if (reservasDelDia.length === 0) {
+                modalContenido.innerHTML = '<li>No hay reservas para este día</li>';
+            } else {
+                reservasDelDia.forEach(reserva => {
+                    modalContenido.innerHTML += `
+                        <li>
+                            Localizador: ${reserva.localizador || 'N/A'}<br>
+                            Hotel: ${reserva.hotel ? reserva.hotel.usuario : 'N/A'}<br>
+                            Tipo de Trayecto: ${reserva.tipoReserva ? reserva.tipoReserva.descripcion : 'N/A'}<br>
+                            Hora de Entrada: ${reserva.hora_entrada || 'N/A'}
+                        </li>
+                        <hr>
+                    `;
+                });
+            }
+
+            document.getElementById('modalReservas').style.display = 'block';
+        }
+
+        function cerrarModal() {
+            document.getElementById('modalReservas').style.display = 'none';
+        }
+
+    </script>
+</div>
 @endsection

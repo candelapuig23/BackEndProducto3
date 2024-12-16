@@ -19,6 +19,7 @@ Route::post('/reservations/store', [ReservationController::class, 'store'])->nam
 Route::get('/reservations/{id}/edit', [ReservationController::class, 'edit'])->name('reservations.edit'); // Edición de reservas
 Route::put('/reservations/{id}', [ReservationController::class, 'update'])->name('reservations.update'); // Actualización de reservas
 Route::delete('/reservations/{id}', [ReservationController::class, 'destroy'])->name('reservations.destroy'); // Eliminación de reservas
+Route::get('/admin/trayectos', [UserController::class, 'getTrayectos'])->name('admin.trayectos');
 
 // Ruta para obtener los trayectos (JSON)
 Route::get('/admin/trayectos', [ReservationController::class, 'getTrayectos'])->name('admin.trayectos');
