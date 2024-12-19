@@ -65,6 +65,30 @@
     <div id="nav-buttons" style="margin-top: 10px;"></div>
     <div id="eventos"></div>
 
+    <!-- Opciones para crear reserva, editar perfil y cerrar sesión -->
+    <h3>Opciones</h3>
+    <div class="dashboard-options">
+        <ul>
+            <li>
+                <a href="{{ route('reservations.create') }}">Hacer nueva reserva</a>
+            </li>
+            <li>
+                <a href="{{ route('profile.edit') }}">Editar Perfil</a>
+            </li>
+             <li>
+            <a href="{{ route('register.hotel.form') }}">Registrar Nuevo Hotel</a>
+        </li>
+            <li>
+                <form action="{{ route('logout') }}" method="POST" style="display: inline;">
+                    @csrf
+                    <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">
+                        Cerrar sesión
+                    </button>
+                </form>
+            </li>
+        </ul>
+    </div>
+
     <!-- Modal para mostrar detalles de las reservas -->
     <div id="modalReservas" style="display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -20%); background: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); z-index: 1000;">
         <div>
@@ -74,6 +98,7 @@
         </div>
     </div>
 
+    <!-- Script con calendario actualizado -->
     <script>
         let mesActual, anioActual, trayectos, vistaActual, fechaSeleccionada;
 

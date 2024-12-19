@@ -53,7 +53,31 @@ Route::get('/home', function () {
 Route::get('/reservations', [ReservationController::class, 'index'])->name('reservations.index'); // Listado de reservas
 Route::get('/reservations/{id}', [ReservationController::class, 'show'])->name('reservations.show'); // Detalles de una reserva
 
-// Ruta para el registro de hoteles (si aplica)
-Route::get('/register/hotel', function () {
-    return view('register_hotel'); // Asegúrate de tener esta vista creada
-})->name('register.hotel');
+// Ruta para mostrar el formulario de registro de hoteles desde panel admin
+Route::get('/admin/register-hotel', [UserController::class, 'showRegisterHotelForm'])
+    ->name('register.hotel.form')
+    ->middleware('auth'); // Protegida para administradores desde panel admin
+
+// Ruta para almacenar el registro de hoteles
+Route::post('/admin/register-hotel', [UserController::class, 'registerHotel'])
+    ->name('register.hotel.post')
+    ->middleware('auth');
+
+    //ruta para iniciar sesioncomo hoteles des de la home y para mostrar el formulario de logn
+    Route::get('/hotel/login', [UserController::class, 'showHotelLoginForm'])->name('hotel.login');
+Route::post('/hotel/login', [UserController::class, 'hotelLogin'])->name('hotel.login.post');
+
+//ruta para el panel de hoteles
+Route::get('/hotel/dashboard', [UserController::class, 'hotelDashboard'])->name('hotel.dashboard');
+
+// Ruta para mostrar el formulario de creación de reservas para hoteles
+Route::get('/hotel/reservations/create', [ReservationController::class, 'create'])
+    ->name('hotel.reservations.create');
+
+// Ruta para almacenar la reserva desde el panel de hoteles
+Route::post('/hotel/reservations/store', [ReservationController::class, 'storeFromHotel'])
+    ->name('hotel.reservations.store');
+// Ruta para ejecutar el método setPrecios en UserController
+Route::get('/admin/set-precios', [UserController::class, 'setPrecios'])->name('admin.setPrecios');
+
+

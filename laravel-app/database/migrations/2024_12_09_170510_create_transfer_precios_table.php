@@ -12,29 +12,23 @@ class CreateTransferPreciosTable extends Migration
      * @return void
      */
     public function up()
-    {
-       Schema::create('transfer_precios', function (Blueprint $table) {
-    $table->increments('id_precios'); // Clave primaria
-    $table->unsignedInteger('id_vehiculo'); // Relación con transfer_vehiculo
-    $table->unsignedBigInteger('id_hotel'); // Relación con transfer_hotel
-    $table->integer('Precio'); // Columna Precio
-    $table->timestamps(); // created_at y updated_at
+{
+    Schema::create('transfer_precios', function (Blueprint $table) {
+        $table->id('id_precios'); // Clave primaria autoincremental
+        $table->unsignedBigInteger('id_vehiculo'); // Relación con vehículos
+        $table->unsignedBigInteger('id_hotel');    // Relación con hoteles
+        $table->integer('precio')->default(50);    // Precio con valor por defecto
 
-    // Relaciones
-    $table->foreign('id_vehiculo')->references('id_vehiculo')->on('transfer_vehiculo')->onDelete('cascade');
-    $table->foreign('id_hotel')->references('id_hotel')->on('transfer_hotel')->onDelete('cascade');
-});
+        $table->foreign('id_vehiculo')->references('id_vehiculo')->on('transfer_vehiculo')->onDelete('cascade');
+        $table->foreign('id_hotel')->references('id_hotel')->on('tranfer_hotel')->onDelete('cascade');
 
-    }
-
-    /**
-     * Reverse the migrations.
-     *
-     * @return void
-     */
-    public function down()
-    {
-        Schema::dropIfExists('transfer_precios');
-    }
+        $table->timestamps(); // Campos created_at y updated_at
+    });
 }
 
+public function down()
+{
+    Schema::dropIfExists('transfer_precios');
+}
+
+}

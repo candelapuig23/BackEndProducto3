@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use App\Models\TransferViajero;
 use App\Models\TransferViajeroAdmin;
 use App\Models\TransferReserva;
+use App\Models\TransferHotel;
 
 
 
@@ -331,8 +332,156 @@ public function getTrayectos(Request $request)
     return response()->json($trayectos);
 }
 
+//METODOS PARA LOS HOTELES
+// Mostrar el formulario de registro de hoteles des de panel admin
+public function showRegisterHotelForm()
+{
+    return view('register_hotel'); // Asegúrate de tener esta vista en resources/views
+}
+
+// Registrar un nuevo hotel des de panel admin
+public function registerHotel(Request $request)
+{
+    // Validar los datos del formulario
+    $validated = $request->validate([
+        'id_zona' => 'required|integer|exists:transfer_zona,id_zona',
+        'comision' => 'required|numeric|min:0|max:100',
+        'usuario' => 'required|email|unique:transfer_hotel,usuario',
+        'password' => 'required|string|min:6|confirmed',
+    ]);
+
+    // Crear un nuevo hotel
+    TransferHotel::create([
+        'id_zona' => $validated['id_zona'],
+        'comision' => $validated['comision'],
+        'usuario' => $validated['usuario'],
+        'password' => Hash::make($validated['password']),
+    ]);
+
+    return redirect()->route('admin.dashboard')->with('success', 'Hotel registrado correctamente.');
+}
+
+public function showHotelLoginForm()
+{
+    return view('auth.hotel_login'); // Vista para login de hoteles
+}
+
+public function loginHotel(Request $request)
+{
+    $validated = $request->validate([
+        'usuario' => 'required|email',
+        'password' => 'required|string',
+    ]);
+
+    // Buscar el hotel en la tabla transfer_hotel
+    $hotel = TransferHotel::where('usuario', $validated['usuario'])->first();
+
+    if ($hotel && Hash::check($validated['password'], $hotel->password)) {
+        // Autenticar al hotel (usando Auth guard opcional)
+        Auth::login($hotel);
+
+        return redirect()->route('hotel.dashboard')->with('success', 'Bienvenido al panel del hotel.');
+    }
+
+    return back()->withErrors(['usuario' => 'Credenciales incorrectas.']);
+}
 
 
+//método login de hoteles
+
+public function hotelLogin(Request $request)
+{
+    // Log del intento de inicio de sesión
+    \Log::info('Intento de inicio de sesión de hotel:', $request->all());
+
+    // Validar las credenciales enviadas por el formulario
+    $validated = $request->validate([
+        'usuario' => 'required|email', // El campo usuario es un email
+        'password' => 'required|string',
+    ]);
+
+    // Buscar el hotel en la base de datos por el campo "usuario"
+    $hotel = TransferHotel::where('usuario', $validated['usuario'])->first();
+
+    if ($hotel) {
+        \Log::info('Hotel encontrado:', ['usuario' => $hotel->usuario]);
+    } else {
+        \Log::error('Hotel no encontrado en la tabla transfer_hotel.', ['usuario' => $validated['usuario']]);
+    }
+
+    // Verificar si el hotel existe y la contraseña coincide
+    if ($hotel && Hash::check($validated['password'], $hotel->password)) {
+        // Almacenar el ID del hotel en la sesión manualmente
+        session(['hotel_id' => $hotel->id_hotel]);
+        \Log::info('Hotel autenticado correctamente:', ['usuario' => $hotel->usuario]);
+
+        // Redirigir al panel del hotel
+        return redirect()->route('hotel.dashboard')->with('success', 'Inicio de sesión exitoso.');
+    }
+
+    // Si falla la autenticación
+    \Log::error('Credenciales incorrectas para el hotel.', ['usuario' => $validated['usuario']]);
+    return back()->withErrors(['error' => 'Credenciales incorrectas.'])->withInput();
+}
+
+//método del panel del hoteles
+public function hotelDashboard()
+{
+    // Obtener el ID del hotel autenticado almacenado en la sesión
+    $hotelId = session('hotel_id');
+
+    if (!$hotelId) {
+        \Log::error('No hay un hotel autenticado en la sesión.');
+        return redirect()->route('hotel.login.form')->withErrors(['error' => 'Debes iniciar sesión primero.']);
+    }
+
+    // Obtener los datos del hotel
+    $hotel = TransferHotel::find($hotelId);
+
+    if (!$hotel) {
+        \Log::error('El hotel no existe en la base de datos.', ['id' => $hotelId]);
+        return redirect()->route('hotel.login.form')->withErrors(['error' => 'El hotel no existe.']);
+    }
+
+    // Obtener las reservas asociadas a este hotel
+    $reservas = TransferReserva::where('id_hotel', $hotel->id_hotel)->get();
+
+    \Log::info('Panel del hotel cargado correctamente.', ['hotel' => $hotel->usuario, 'reservas' => $reservas->count()]);
+
+    // Retornar la vista con el hotel y las reservas
+    return view('hotel.hotel_dashboard', compact('hotel', 'reservas'));
+}
+
+//metodo temporal para asignar el precio 50€ a todas las combinaciones de vehiculos y hotel
+
+/*public function setPrecios()
+{
+    $precioFijo = 50; // Precio fijo que se asignará a todas las combinaciones
+
+    // Obtener todos los hoteles y vehículos
+    $hoteles = \App\Models\TransferHotel::all();
+    $vehiculos = \App\Models\TransferVehiculo::all();
+
+    foreach ($hoteles as $hotel) {
+        foreach ($vehiculos as $vehiculo) {
+            // Comprobar si ya existe un precio para esta combinación
+            $existePrecio = \App\Models\TransferPrecios::where('id_hotel', $hotel->id_hotel)
+                ->where('id_vehiculo', $vehiculo->id_vehiculo)
+                ->first();
+
+            if (!$existePrecio) {
+                // Crear un nuevo precio si no existe
+                \App\Models\TransferPrecios::create([
+                    'id_hotel' => $hotel->id_hotel,
+                    'id_vehiculo' => $vehiculo->id_vehiculo,
+                    'precio' => $precioFijo,
+                ]);
+            }
+        }
+    }
+
+    return "Precios asignados correctamente.";
+}*/
 
 
 

@@ -2,7 +2,12 @@
 
 @section('content')
 <div class="container">
+    @if (Auth::user() instanceof App\Models\TransferHotel)
+    <form action="{{ route('hotel.reservations.store') }}" method="POST" id="reservationForm">
+@else
     <form action="{{ route('reservations.store') }}" method="POST" id="reservationForm">
+@endif
+
         @csrf
         <h2>Formulario de Reserva de Traslado</h2>
 
@@ -56,14 +61,23 @@
             @endforeach
         </select>
 
-        <!-- Selección de Hotel -->
-        <label for="hotelDestino">Hotel de destino/recogida:</label>
-        <select name="hotelDestino" id="hotelDestino" required>
-            <option value="">Seleccione un hotel</option>
-            @foreach($hoteles as $hotel)
-                <option value="{{ $hotel->id_hotel }}">{{ ucfirst($hotel->usuario) }}</option>
-            @endforeach
-        </select>
+       <!-- Selección de Hotel -->
+@if (Auth::user() instanceof App\Models\TransferHotel)
+    <!-- Campo oculto si el usuario autenticado es un hotel -->
+    <input type="hidden" name="hotelDestino" value="{{ Auth::user()->id_hotel }}">
+@else
+    <!-- Selección manual del hotel para admin o particulares -->
+    <label for="hotelDestino">Hotel de destino/recogida:</label>
+    <select name="hotelDestino" id="hotelDestino" required>
+        <option value="">Seleccione un hotel</option>
+        @foreach($hoteles as $hotel)
+            <option value="{{ $hotel->id_hotel }}">{{ ucfirst($hotel->usuario) }}</option>
+        @endforeach
+    </select>
+@endif
+
+
+
 
         <!-- Número de Viajeros -->
         <label for="numViajeros">Número de viajeros:</label>

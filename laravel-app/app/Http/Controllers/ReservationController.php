@@ -209,5 +209,58 @@ class ReservationController extends Controller
 }
 
 
+//metodo para cargar los datos necesarios para el formulario de reservas des de hoteles
+
+public function createFromHotel()
+{
+    $tiposTrayecto = TransferTipoReserva::select('id_tipo_reserva', 'descripcion')->distinct()->get();
+    $vehiculos = TransferVehiculo::select('id_vehiculo', 'descripcion')->get();
+    $zonas = TransferZona::select('id_zona', 'descripcion')->get();
+
+    // Obtener el hotel autenticado
+    $hotel = Auth::user();
+
+    return view('reservations.make', compact('tiposTrayecto', 'vehiculos', 'zonas', 'hotel'));
+}
+
+//metodo para la creacion de reservas HECHAS POR HOTELES
+public function storeFromHotel(Request $request)
+{
+    // Validar los datos del formulario
+    $validated = $request->validate([
+        'trayecto' => 'required|string',
+        'diaLlegada' => 'nullable|date',
+        'horaLlegada' => 'nullable|date_format:H:i',
+        'idZona' => 'required|integer|exists:transfer_zona,id_zona',
+        'idVehiculo' => 'required|integer|exists:transfer_vehiculo,id_vehiculo',
+        'numViajeros' => 'required|integer|min:1',
+        'email' => 'required|email',
+        'nombre' => 'required|string',
+    ]);
+
+    // Obtener el hotel autenticado
+    $hotel = Auth::user();
+
+    // Obtener el tipo de reserva
+    $idTipoReserva = TransferTipoReserva::where('descripcion', $validated['trayecto'])->first()->id_tipo_reserva;
+
+    // Crear la reserva en la base de datos
+    TransferReserva::create([
+        'localizador' => uniqid('LOC-'),
+        'id_hotel' => $hotel->id_hotel, // Asociar la reserva al hotel autenticado
+        'id_tipo_reserva' => $idTipoReserva,
+        'email_cliente' => $validated['email'],
+        'fecha_reserva' => now(),
+        'id_destino' => $validated['idZona'],
+        'num_viajeros' => $validated['numViajeros'],
+        'id_vehiculo' => $validated['idVehiculo'],
+        'fecha_entrada' => $validated['diaLlegada'] ?? null,
+        'hora_entrada' => $validated['horaLlegada'] ?? null,
+    ]);
+
+    // Redirigir al panel del hotel con mensaje de éxito
+    return redirect()->route('hotel.dashboard')->with('success', 'Reserva creada correctamente.');
+}
+
 
 }

@@ -1,0 +1,273 @@
+/* Estilos generales del dashboard */
+.dashboard-container {
+    font-family: Arial, sans-serif;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+    text-align: center;
+    color: #333;
+}
+
+h3 {
+    color: #333;
+    margin-top: 20px;
+    text-align: left;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background-color: white;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    /* Bordes redondeados */
+    overflow: hidden;
+}
+
+table th,
+table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+table th {
+    background-color: #007bff;
+    /* Fondo azul */
+    color: white;
+    /* Texto blanco */
+    text-align: center;
+    /* Centra el texto en los encabezados */
+    font-weight: bold;
+    padding: 12px;
+    border-bottom: 2px solid #ddd;
+    /* Añade una línea separadora */
+    text-transform: uppercase;
+    /* Texto en mayúsculas */
+    font-size: 14px;
+}
+
+table td {
+    color: #333;
+    /* Texto más oscuro */
+}
+
+table tr:nth-child(even) {
+    background-color: #f9f9f9;
+    /* Alterna colores en las filas */
+}
+
+table tr:hover {
+    background-color: #f1f1f1;
+    /* Resalta al pasar el ratón */
+}
+
+table td a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+table td a:hover {
+    text-decoration: underline;
+}
+
+.no-reservations {
+    text-align: center;
+    font-size: 18px;
+    color: #555;
+}
+
+.dashboard-options ul {
+    list-style: none;
+    padding: 0;
+}
+
+.dashboard-options li {
+    margin: 10px 0;
+}
+
+.dashboard-options a {
+    text-decoration: none;
+    color: #007bff;
+}
+
+.dashboard-options a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos del calendario */
+.calendar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+}
+
+.calendar table {
+    width: 90%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    /* Sombra para dar profundidad */
+    background-color: white;
+    border-radius: 8px;
+    /* Bordes redondeados */
+    overflow: hidden;
+}
+
+.calendar th,
+.calendar td {
+    padding: 16px;
+    /* Más espacio interno */
+    text-align: center;
+    border: 1px solid #ddd;
+    font-size: 14px;
+    /* Ajusta el tamaño del texto */
+}
+
+.calendar th {
+    background-color: #4caf50;
+    /* Fondo verde */
+    color: white;
+    /* Texto blanco */
+    font-weight: bold;
+    text-transform: uppercase;
+    /* Texto en mayúsculas */
+}
+
+.calendar td {
+    color: #333;
+    /* Texto más oscuro */
+}
+
+.calendar tr:nth-child(even) {
+    background-color: #f9f9f9;
+    /* Alterna colores en las filas */
+}
+
+.calendar tr:hover {
+    background-color: #f1f1f1;
+    /* Resalta al pasar el ratón */
+}
+
+.calendar .dia {
+    padding: 8px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.calendar ul {
+    list-style: none;
+    padding: 0;
+}
+
+.calendar li {
+    font-size: 12px;
+    margin: 5px 0;
+}
+
+.calendar .more {
+    cursor: pointer;
+    color: #007bff;
+    background-color: transparent;
+    border: none;
+    font-size: 14px;
+}
+
+.calendar .more:hover {
+    text-decoration: underline;
+}
+
+.calendar .caption {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 10px;
+}
+
+.calendar .caption span {
+    font-size: 16px;
+    font-weight: bold;
+    color: #333;
+    /* Texto oscuro */
+    margin: 0 10px;
+}
+
+.calendar .caption button {
+    background-color: #007bff;
+    /* Azul */
+    color: white;
+    /* Texto blanco */
+    border: none;
+    padding: 10px 15px;
+    margin: 5px;
+    font-size: 14px;
+    font-weight: bold;
+    border-radius: 5px;
+    /* Bordes redondeados */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    /* Transición suave */
+}
+
+.calendar .caption button:hover {
+    background-color: #0056b3;
+    /* Azul más oscuro al pasar el ratón */
+}
+
+/* Popup */
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    justify-content: center;
+    align-items: center;
+}
+
+.popup .info_popup {
+    background: white;
+    padding: 20px;
+    border-radius: 5px;
+    width: 80%;
+    max-width: 600px;
+}
+
+.close-btn {
+    background-color: #ff4c4c;
+    /* Color de fondo rojo */
+    color: white;
+    /* Texto blanco */
+    border: none;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 14px;
+    margin-top: 10px;
+    border-radius: 5px;
+}
+
+.close-btn:hover {
+    background-color: #ff1a1a;
+    /* Cambio de color cuando se pasa el ratón */
+}
+
+/* Estilo para mensaje de "No hay eventos programados" */
+.calendar td[colspan="3"] {
+    text-align: center;
+    font-style: italic;
+    color: #888;
+    /* Texto en gris */
+    font-size: 14px;
+    background-color: #f9f9f9;
+    /* Fondo claro */
+}
