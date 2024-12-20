@@ -277,5 +277,54 @@ public function storeFromHotel(Request $request)
     return redirect()->route('hotel.dashboard')->with('success', 'Reserva creada correctamente.');
 }
 
+public function getReservasPorZonas()
+{
+    \Log::info('Inicio del método getReservasPorZonas.');
+
+    try {
+        // Validación básica: Verificar si hay reservas en la base de datos
+        $totalReservas = TransferReserva::count();
+        if ($totalReservas === 0) {
+            \Log::warning('No hay reservas en la base de datos.');
+            return response()->json([
+                'success' => false,
+                'message' => 'No hay reservas registradas en el sistema.',
+                'data' => []
+            ], 404);
+        }
+
+        // Obtener las reservas agrupadas por zona
+        $reservasPorZona = \DB::table('transfer_reservas')
+            ->join('transfer_zona', 'transfer_reservas.id_destino', '=', 'transfer_zona.id_zona')
+            ->select(
+                'transfer_zona.descripcion as zona',
+                \DB::raw('COUNT(transfer_reservas.id_reserva) as total_reservas')
+            )
+            ->groupBy('transfer_zona.id_zona', 'transfer_zona.descripcion')
+            ->get();
+
+        // Añadir el porcentaje para cada zona
+        $reservasPorZona->transform(function ($zona) use ($totalReservas) {
+            $zona->porcentaje = round(($zona->total_reservas / $totalReservas) * 100, 2);
+            return $zona;
+        });
+
+        \Log::info('Datos agregados correctamente:', ['data' => $reservasPorZona]);
+
+        // Respuesta JSON exitosa
+        return response()->json([
+            'success' => true,
+            'data' => $reservasPorZona,
+            'total_reservas' => $totalReservas
+        ], 200);
+    } catch (\Exception $e) {
+        \Log::error('Error en el método getReservasPorZonas: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Ocurrió un error al procesar los datos.'
+        ], 500);
+    }
+}
+
 
 }

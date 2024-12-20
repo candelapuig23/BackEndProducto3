@@ -83,4 +83,4 @@ Route::post('/hotel/reservations/store', function () {
 // Ruta para ejecutar el método setPrecios en UserController
 Route::get('/admin/set-precios', [UserController::class, 'setPrecios'])->name('admin.setPrecios');
 
-
+Route::get('/api/reservas/zonas', [ReservationController::class, 'getReservasPorZonas'])->name('api.reservas.zonas');
