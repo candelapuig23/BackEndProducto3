@@ -12,6 +12,7 @@
                     <th>ID Reserva</th>
                     <th>Fecha de Entrada</th>
                     <th>Número de Viajeros</th>
+                    <th>Precio</th>
                     <th>Comisión</th>
                 </tr>
             </thead>
@@ -21,14 +22,36 @@
                         <td>{{ $reserva->id_reserva }}</td>
                         <td>{{ $reserva->fecha_entrada }}</td>
                         <td>{{ $reserva->num_viajeros }}</td>
-                        <td>{{ $hotel->comision }} %</td>
+                        <td>{{ number_format($reserva->precio, 2) }} €</td>
+                        <td>{{ number_format($reserva->comision, 2) }} €</td>
                     </tr>
                 @endforeach
             </tbody>
         </table>
     @endif
 
-    <!-- Botón para crear una nueva reserva -->
-<a href="{{ route('hotel.reservations.create') }}" class="btn btn-primary">Crear Nueva Reserva</a>
+    <h3>Resumen de Comisiones por Mes</h3>
+    @if (!empty($comisionesPorMes))
+        <table>
+            <thead>
+                <tr>
+                    <th>Mes</th>
+                    <th>Total Comisiones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($comisionesPorMes as $mes => $data)
+                    <tr>
+                        <td>{{ $mes }}</td>
+                        <td>{{ number_format($data['total_comision'], 2) }} €</td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <p>No hay comisiones registradas.</p>
+    @endif
 
+    <!-- Botón para crear una nueva reserva -->
+    <a href="{{ route('hotel.reservations.create') }}" class="btn btn-primary">Crear Nueva Reserva</a>
 </div>

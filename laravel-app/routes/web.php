@@ -71,12 +71,15 @@ Route::post('/hotel/login', [UserController::class, 'hotelLogin'])->name('hotel.
 Route::get('/hotel/dashboard', [UserController::class, 'hotelDashboard'])->name('hotel.dashboard');
 
 // Ruta para mostrar el formulario de creación de reservas para hoteles
-Route::get('/hotel/reservations/create', [ReservationController::class, 'create'])
+Route::get('/hotel/reservations/create', [ReservationController::class, 'createFromHotel'])
     ->name('hotel.reservations.create');
 
+
 // Ruta para almacenar la reserva desde el panel de hoteles
-Route::post('/hotel/reservations/store', [ReservationController::class, 'storeFromHotel'])
-    ->name('hotel.reservations.store');
+Route::post('/hotel/reservations/store', function () {
+    \Log::info('La ruta hotel.reservations.store fue alcanzada.');
+});
+
 // Ruta para ejecutar el método setPrecios en UserController
 Route::get('/admin/set-precios', [UserController::class, 'setPrecios'])->name('admin.setPrecios');
 

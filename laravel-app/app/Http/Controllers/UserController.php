@@ -7,6 +7,8 @@ use App\Models\TransferViajero;
 use App\Models\TransferViajeroAdmin;
 use App\Models\TransferReserva;
 use App\Models\TransferHotel;
+use App\Models\TransferPrecios;
+
 
 
 
@@ -295,6 +297,7 @@ public function userDashboard()
 //metodo para mostrar la informacion de las reservas en el panel de admin
 public function adminDashboard()
 {
+    // Obtener las reservas generales con las relaciones necesarias
     $reservations = TransferReserva::with(['hotel', 'tipoReserva', 'vehiculo'])->get();
 
     foreach ($reservations as $reservation) {
@@ -306,8 +309,44 @@ public function adminDashboard()
         ]);
     }
 
-    return view('admin.admin_dashboard', compact('reservations'));
+    // Obtener las reservas realizadas por hoteles
+    $hoteles = TransferHotel::with(['reservas'])->get();
+    $reservasPorHotel = [];
+
+    foreach ($hoteles as $hotel) {
+        $totalComision = 0;
+        $reservas = $hotel->reservas;
+
+        foreach ($reservas as $reserva) {
+            $precio = TransferPrecios::where('id_hotel', $hotel->id_hotel)
+                ->where('id_vehiculo', $reserva->id_vehiculo)
+                ->value('precio');
+
+            if ($precio) {
+                $totalReserva = $precio; // Sin multiplicar por num_viajeros
+                $comision = ($hotel->comision / 100) * $totalReserva;
+                $totalComision += $comision;
+
+                $reservasPorHotel[$hotel->id_hotel]['reservas'][] = [
+                    'localizador' => $reserva->localizador,
+                    'precio' => $precio,
+                    'total' => $totalReserva,
+                    'comision' => $comision,
+                ];
+            }
+        }
+
+        $reservasPorHotel[$hotel->id_hotel]['total_comision'] = $totalComision;
+        $reservasPorHotel[$hotel->id_hotel]['nombre_hotel'] = $hotel->usuario;
+    }
+
+    // Combinar ambas funcionalidades en la vista
+    return view('admin.admin_dashboard', [
+        'reservations' => $reservations,
+        'reservasPorHotel' => $reservasPorHotel
+    ]);
 }
+
 
 public function getTrayectos(Request $request)
 {
@@ -432,7 +471,8 @@ public function hotelDashboard()
 
     if (!$hotelId) {
         \Log::error('No hay un hotel autenticado en la sesión.');
-        return redirect()->route('hotel.login.form')->withErrors(['error' => 'Debes iniciar sesión primero.']);
+        return redirect()->route('hotel.login')->withErrors(['error' => 'Debes iniciar sesión antes de acceder al formulario.']);
+
     }
 
     // Obtener los datos del hotel
@@ -446,11 +486,42 @@ public function hotelDashboard()
     // Obtener las reservas asociadas a este hotel
     $reservas = TransferReserva::where('id_hotel', $hotel->id_hotel)->get();
 
-    \Log::info('Panel del hotel cargado correctamente.', ['hotel' => $hotel->usuario, 'reservas' => $reservas->count()]);
+    // Calcular precios y comisiones para cada reserva
+    foreach ($reservas as $reserva) {
+        $precio = TransferPrecios::where('id_hotel', $hotel->id_hotel)
+            ->where('id_vehiculo', $reserva->id_vehiculo)
+            ->value('precio');
 
-    // Retornar la vista con el hotel y las reservas
-    return view('hotel.hotel_dashboard', compact('hotel', 'reservas'));
+        if ($precio) {
+            $reserva->precio = $precio; // Precio base de la reserva
+            $reserva->comision = ($hotel->comision / 100) * $precio; // Cálculo de la comisión
+        } else {
+            $reserva->precio = 0;
+            $reserva->comision = 0;
+        }
+    }
+
+    // Calcular las comisiones totales por mes
+    $comisionesPorMes = [];
+    foreach ($reservas as $reserva) {
+        $mes = date('Y-m', strtotime($reserva->fecha_entrada)); // Formato "YYYY-MM"
+        if (!isset($comisionesPorMes[$mes])) {
+            $comisionesPorMes[$mes] = [
+                'mes' => $mes,
+                'total_comision' => 0,
+            ];
+        }
+        $comisionesPorMes[$mes]['total_comision'] += $reserva->comision;
+    }
+
+    // Retornar la vista con el hotel, las reservas, y las comisiones por mes
+    return view('hotel.hotel_dashboard', compact('hotel', 'reservas', 'comisionesPorMes'));
 }
+
+
+
+
+
 
 //metodo temporal para asignar el precio 50€ a todas las combinaciones de vehiculos y hotel
 
@@ -483,6 +554,6 @@ public function hotelDashboard()
     return "Precios asignados correctamente.";
 }*/
 
-
-
 }
+
+

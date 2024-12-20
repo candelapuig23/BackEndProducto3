@@ -6,6 +6,7 @@
 <div class="dashboard-container">
     <h2>Bienvenido, Administrador!</h2>
 
+    <!-- Gestión de todas las Reservas -->
     <h3>Gestión de todas las Reservas</h3>
     @if ($reservations->isEmpty())
         <div class="no-reservations">
@@ -54,6 +55,43 @@
         </table>
     @endif
 
+    <!-- Reservas realizadas por Hoteles -->
+    <h3>Reservas realizadas por Hoteles</h3>
+    @if ($reservasPorHotel)
+        <table>
+            <thead>
+                <tr>
+                    <th>Hotel</th>
+                    <th>Localizador</th>
+                    <th>Precio</th>
+                    <th>Total</th>
+                    <th>Comisión</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($reservasPorHotel as $hotelId => $hotelData)
+                    @foreach ($hotelData['reservas'] as $reserva)
+                        <tr>
+                            <td>{{ $hotelData['nombre_hotel'] }}</td>
+                            <td>{{ $reserva['localizador'] }}</td>
+                            <td>{{ $reserva['precio'] }} €</td>
+                            <td>{{ $reserva['total'] }} €</td>
+                            <td>{{ $reserva['comision'] }} €</td>
+                        </tr>
+                    @endforeach
+                    <tr>
+                        <td colspan="5">
+                            <strong>Total Comisión para {{ $hotelData['nombre_hotel'] }}: {{ $hotelData['total_comision'] }} €</strong>
+                        </td>
+                    </tr>
+                @endforeach
+            </tbody>
+        </table>
+    @else
+        <p>No hay reservas realizadas por hoteles.</p>
+    @endif
+
+    <!-- Calendario de Trayectos -->
     <h3>Calendario de Trayectos</h3>
     <div class="view-options">
         <button onclick="cambiarVista('mensual')">Vista Mensual</button>
@@ -75,9 +113,9 @@
             <li>
                 <a href="{{ route('profile.edit') }}">Editar Perfil</a>
             </li>
-             <li>
-            <a href="{{ route('register.hotel.form') }}">Registrar Nuevo Hotel</a>
-        </li>
+            <li>
+                <a href="{{ route('register.hotel.form') }}">Registrar Nuevo Hotel</a>
+            </li>
             <li>
                 <form action="{{ route('logout') }}" method="POST" style="display: inline;">
                     @csrf
@@ -89,28 +127,28 @@
         </ul>
     </div>
 
-    <!-- Modal para mostrar detalles de las reservas -->
-    <div id="modalReservas" style="display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -20%); background: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); z-index: 1000;">
-        <div>
-            <span onclick="cerrarModal()" style="cursor: pointer; float: right;">&times;</span>
-            <h4 id="modalTitulo"></h4>
-            <ul id="modalContenido"></ul>
-        </div>
+     <!-- Modal para mostrar detalles de las reservas -->
+<div id="modalReservas" style="display: none; position: fixed; top: 20%; left: 50%; transform: translate(-50%, -20%); background: white; padding: 20px; box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div>
+        <!-- Botón para cerrar el modal -->
+        <span onclick="cerrarModal()" style="cursor: pointer; float: right; font-size: 20px;">&times;</span>
+        <h4 id="modalTitulo" style="margin-top: 0;">Detalles de las Reservas</h4>
+        <ul id="modalContenido" style="list-style: none; padding: 0; margin: 0;">
+            <!-- Aquí se generará dinámicamente el contenido de las reservas -->
+        </ul>
     </div>
+</div>
 
     <!-- Script con calendario actualizado -->
     <script>
         let mesActual, anioActual, trayectos, vistaActual, fechaSeleccionada;
-
         document.addEventListener('DOMContentLoaded', function () {
             mesActual = new Date().getMonth();
             anioActual = new Date().getFullYear();
             fechaSeleccionada = new Date();
             vistaActual = 'mensual'; 
-
             cargarTrayectos();
         });
-
         function cargarTrayectos() {
             fetch('{{ route('admin.trayectos') }}')
                 .then(response => response.json())
@@ -120,12 +158,10 @@
                 })
                 .catch(error => console.error('Error al cargar los trayectos:', error));
         }
-
         function cambiarVista(vista) {
             vistaActual = vista;
             generarCalendario(vistaActual);
         }
-
         function generarCalendario(vista) {
             if (vista === 'mensual') {
                 generarVistaMensual();
@@ -138,78 +174,60 @@
                 mostrarBotonesNavegacion('diaria');
             }
         }
-
         function generarVistaMensual() {
     const diasEnMes = new Date(anioActual, mesActual + 1, 0).getDate();
     const primerDiaSemana = new Date(anioActual, mesActual, 1).getDay();
     const nombreMes = new Date(anioActual, mesActual).toLocaleString('default', { month: 'long' });
-
     let html = `<h4>${nombreMes} ${anioActual}</h4><table><tr>`;
-
     for (let i = 0; i < primerDiaSemana; i++) {
         html += `<td></td>`;
     }
-
     for (let dia = 1; dia <= diasEnMes; dia++) {
         const fecha = new Date(anioActual, mesActual, dia);
         const reservasDelDia = trayectos.filter(trayecto => {
             let fechaTrayecto = new Date(trayecto.fecha_entrada);
             return fechaTrayecto.toDateString() === fecha.toDateString();
         });
-
         let indicadorReservas = reservasDelDia.length > 0 ? `<span style="color: red;">●</span>` : '';
         html += `<td onclick="mostrarReservasDelDia(${anioActual}, ${mesActual + 1}, ${dia})">
                     ${dia} ${indicadorReservas}
                  </td>`;
         if ((dia + primerDiaSemana) % 7 === 0) html += `</tr><tr>`;
     }
-
     html += `</tr></table>`;
     document.getElementById('calendar').innerHTML = html;
 }
-
-
         function generarVistaSemanal() {
     let hoy = new Date(fechaSeleccionada);
     let inicioSemana = new Date(hoy);
     inicioSemana.setDate(hoy.getDate() - hoy.getDay() + 1); // Lunes de la semana
-
     let finSemana = new Date(inicioSemana);
     finSemana.setDate(inicioSemana.getDate() + 6); // Domingo de la semana
-
     let html = `<h4>Semana del ${inicioSemana.toDateString()} al ${finSemana.toDateString()}</h4><table><tr>`;
-
     for (let i = 0; i < 7; i++) {
         let dia = new Date(inicioSemana);
         dia.setDate(inicioSemana.getDate() + i);
-
         // Filtrar reservas para el día actual
         let reservasDelDia = trayectos.filter(trayecto => {
             let fechaTrayecto = new Date(trayecto.fecha_entrada);
             return fechaTrayecto.toDateString() === dia.toDateString();
         });
-
         // Mostrar indicador si hay reservas
         let indicadorReservas = reservasDelDia.length > 0 ? `<span style="color: red;">●</span>` : '';
         html += `<td onclick="mostrarReservasDelDia(${dia.getFullYear()}, ${dia.getMonth() + 1}, ${dia.getDate()})">
                     ${dia.toDateString()} ${indicadorReservas}
                  </td>`;
     }
-
     html += `</tr></table>`;
     document.getElementById('calendar').innerHTML = html;
 }
-
-
         function generarVistaDiaria() {
     let dia = new Date(fechaSeleccionada);
     const diaStr = dia.toDateString();
-
     let reservasDelDia = trayectos.filter(trayecto => {
         let fechaTrayecto = new Date(trayecto.fecha_entrada);
         return fechaTrayecto.toDateString() === diaStr;
     });
-
     let html = `<h4>Reservas del ${diaStr}</h4><ul>`;
     if (reservasDelDia.length === 0) {
         html += `<li>No hay reservas para este día</li>`;
@@ -221,8 +239,6 @@
     html += `</ul>`;
     document.getElementById('calendar').innerHTML = html;
 }
-
-
         function mostrarBotonesNavegacion(vista) {
             let html = '';
             if (vista === 'mensual') {
@@ -237,22 +253,19 @@
             }
             document.getElementById('nav-buttons').innerHTML = html;
         }
-
         function mostrarReservasDelDia(anio, mes, dia) {
+    console.log(`Día seleccionado: ${anio}-${mes}-${dia}`); // Comprobar si la función se ejecuta
+    console.log('Trayectos disponibles:', trayectos); // Verificar los datos cargados
             fechaSeleccionada = new Date(anio, mes - 1, dia);
             const diaStr = fechaSeleccionada.toDateString();
-
             let reservasDelDia = trayectos.filter(trayecto => {
                 let fechaTrayecto = new Date(trayecto.fecha_entrada);
                 return fechaTrayecto.toDateString() === diaStr;
             });
-
             const modalTitulo = document.getElementById('modalTitulo');
             const modalContenido = document.getElementById('modalContenido');
-
             modalTitulo.textContent = `Reservas del ${diaStr}`;
             modalContenido.innerHTML = '';
-
             if (reservasDelDia.length === 0) {
                 modalContenido.innerHTML = '<li>No hay reservas para este día</li>';
             } else {
@@ -268,14 +281,11 @@
                     `;
                 });
             }
-
             document.getElementById('modalReservas').style.display = 'block';
         }
-
         function cerrarModal() {
             document.getElementById('modalReservas').style.display = 'none';
         }
-
     </script>
 </div>
 @endsection
