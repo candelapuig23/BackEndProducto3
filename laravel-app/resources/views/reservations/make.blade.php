@@ -2,6 +2,17 @@
 
 @section('content')
 <div class="container">
+    <!-- Mostrar errores -->
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     @if (Auth::user() instanceof App\Models\TransferHotel)
     <form action="{{ route('hotel.reservations.store') }}" method="POST" id="reservationForm">
 @else

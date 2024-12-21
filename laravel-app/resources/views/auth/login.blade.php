@@ -1,11 +1,9 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Iniciar Sesión</title>
-</head>
-<body>
+@extends('layouts.app')
+
+@section('title', 'Iniciar Sesión')
+
+@section('content')
+<div class="login-container">
     <h1>Iniciar Sesión</h1>
     <form method="POST" action="{{ route('login') }}">
         @csrf
@@ -23,5 +21,5 @@
 
         <button type="submit">Iniciar Sesión</button>
     </form>
-</body>
-</html>
+</div>
+@endsection

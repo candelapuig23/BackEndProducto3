@@ -5,6 +5,18 @@
 @section('content')
 <div class="container">
     <h2>Editar Reserva #{{ $reservation->id_reserva }}</h2>
+
+    <!-- Mostrar errores si existen -->
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul>
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form action="{{ route('reservations.update', $reservation->id_reserva) }}" method="POST">
         @csrf
         @method('PUT')
@@ -61,16 +73,14 @@
         <input type="number" name="num_viajeros" value="{{ $reservation->num_viajeros }}" required>
 
         <label>Vehículo:</label>
-<select name="id_vehiculo" required>
-    @foreach ($vehiculos as $vehiculo)
-        <option value="{{ $vehiculo->id_vehiculo }}" 
-            {{ $vehiculo->id_vehiculo == $reservation->id_vehiculo ? 'selected' : '' }}>
-            {{ $vehiculo->descripcion }}
-        </option>
-    @endforeach
-</select>
-
-
+        <select name="id_vehiculo" required>
+            @foreach ($vehiculos as $vehiculo)
+                <option value="{{ $vehiculo->id_vehiculo }}" 
+                    {{ $vehiculo->id_vehiculo == $reservation->id_vehiculo ? 'selected' : '' }}>
+                    {{ $vehiculo->descripcion }}
+                </option>
+            @endforeach
+        </select>
 
         <button type="submit">Actualizar Reserva</button>
     </form>

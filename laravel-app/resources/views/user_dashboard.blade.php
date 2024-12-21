@@ -31,16 +31,17 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($reservations as $reservation)
-                        <tr>
-                            <td>{{ $reservation->localizador }}</td>
-                            <td>{{ $reservation->tipo_reserva }}</td>
-                            <td>{{ $reservation->vehiculo }}</td>
-                            <td>{{ $reservation->fecha_reserva }}</td>
-                            <td>{{ $reservation->realizado_por }}</td>
-                        </tr>
-                    @endforeach
-                </tbody>
+    @foreach ($reservations as $reservation)
+        <tr>
+            <td>{{ $reservation->localizador }}</td>
+            <td>{{ $reservation->tipoReserva ? $reservation->tipoReserva->descripcion : 'N/A' }}</td>
+            <td>{{ $reservation->vehiculo ? $reservation->vehiculo->descripcion : 'N/A' }}</td>
+            <td>{{ $reservation->fecha_reserva }}</td>
+            <td>{{ $reservation->usuario ? $reservation->usuario->nombre : 'N/A' }}</td>
+        </tr>
+    @endforeach
+</tbody>
+
             </table>
         @endif
     </div>

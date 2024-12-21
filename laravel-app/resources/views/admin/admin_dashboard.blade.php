@@ -2,6 +2,8 @@
 
 @section('title', 'Panel de Administrador')
 
+@section('header', 'Panel de Administrador')
+
 @section('content')
 <div class="dashboard-container">
     <h2>Bienvenido, Administrador!</h2>

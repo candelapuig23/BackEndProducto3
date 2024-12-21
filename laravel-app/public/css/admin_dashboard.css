@@ -8,7 +8,12 @@
     border-radius: 8px;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
-
+header h1 {
+    text-align: center;
+    font-size: 3em;
+    color: #333;
+    margin: 20px 0;
+}
 h2 {
     text-align: center;
     color: #333;
@@ -270,4 +275,30 @@ table td a:hover {
     font-size: 14px;
     background-color: #f9f9f9;
     /* Fondo claro */
+}
+/* Garantizar ancho uniforme */
+table {
+    width: 100%;
+    table-layout: fixed;
+    /* Las columnas tendrán ancho uniforme */
+    border-collapse: collapse;
+}
+
+/* Ajustar alineación */
+table th,
+table td {
+    text-align: center;
+    /* Centrar el texto */
+    padding: 12px;
+    word-wrap: break-word;
+    /* Ajustar texto largo */
+    overflow-wrap: break-word;
+}
+
+/* Diferenciar la fila de "Total Comisión" */
+table td[colspan="5"] {
+    text-align: center;
+    font-weight: bold;
+    background-color: #f9f9f9;
+    /* Color claro */
 }

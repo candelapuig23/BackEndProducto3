@@ -24,54 +24,60 @@ class ReservationController extends Controller
 }
 
 
-    // Procesar el formulario de reserva
-    public function store(Request $request)
-    {
-        // Validar los datos del formulario
-        $validated = $request->validate([
-            'trayecto' => 'required|string',
-            'diaLlegada' => 'nullable|date',
-            'horaLlegada' => 'nullable|date_format:H:i',
-            'numeroVuelo' => 'nullable|string|max:50',
-            'aeropuertoOrigen' => 'nullable|string|max:50',
-            'diaVuelo' => 'nullable|date',
-            'horaVuelo' => 'nullable|date_format:H:i',
-            'numeroVueloRegreso' => 'nullable|string|max:50',
-            'horaRecogida' => 'nullable|date_format:H:i',
-            'idZona' => 'required|integer|exists:transfer_zona,id_zona',
-            'idVehiculo' => 'required|integer|exists:transfer_vehiculo,id_vehiculo',
-            'hotelDestino' => 'required|integer|exists:transfer_hotel,id_hotel',
-            'numViajeros' => 'required|integer|min:1',
-            'email' => 'required|email',
-            'nombre' => 'required|string',
-        ]);
+   // Procesar el formulario de reserva
+public function store(Request $request)
+{
+    \Log::info('Método store alcanzado.');
 
-        // Validar tiempo mínimo de 48 horas
-        if ($request->trayecto !== 'ida y vuelta') {
-            $fechaHora = strtotime($validated['diaLlegada'] . ' ' . $validated['horaLlegada']);
-            if (($fechaHora - time()) < 48 * 3600) {
-                return redirect()->back()->withErrors(['error' => 'No se puede realizar la reserva con menos de 48 horas de antelación.']);
-            }
+    // Validar los datos del formulario
+    $validated = $request->validate([
+        'trayecto' => 'required|string',
+        'diaLlegada' => 'nullable|date|required_if:trayecto,Solo ida',
+        'horaLlegada' => 'nullable|date_format:H:i|required_if:trayecto,Solo ida',
+        'numeroVuelo' => 'nullable|string|max:50|required_if:trayecto,Solo ida',
+        'aeropuertoOrigen' => 'nullable|string|max:50|required_if:trayecto,Solo ida',
+        'diaVuelo' => 'nullable|date|required_if:trayecto,Solo vuelta',
+        'horaVuelo' => 'nullable|date_format:H:i|required_if:trayecto,Solo vuelta',
+        'horaRecogida' => 'nullable|date_format:H:i|required_if:trayecto,Solo vuelta',
+        'idZona' => 'required|integer|exists:transfer_zona,id_zona',
+        'idVehiculo' => 'required|integer|exists:transfer_vehiculo,id_vehiculo',
+        'hotelDestino' => 'required|integer|exists:transfer_hotel,id_hotel',
+        'numViajeros' => 'required|integer|min:1',
+        'email' => 'required|email',
+        'nombre' => 'required|string',
+    ]);
+    \Log::info('Validación completada con éxito.', $validated);
+
+    // Validar tiempo mínimo de 48 horas
+    if ($request->trayecto !== 'ida y vuelta') {
+        $fechaHora = $validated['trayecto'] === 'Solo ida' 
+            ? strtotime($validated['diaLlegada'] . ' ' . $validated['horaLlegada'])
+            : strtotime($validated['diaVuelo'] . ' ' . $validated['horaVuelo']);
+        
+        if (($fechaHora - time()) < 48 * 3600) {
+            return redirect()->back()->withErrors(['error' => 'No se puede realizar la reserva con menos de 48 horas de antelación.']);
         }
+    }
 
-        // Crear o buscar el usuario
-        $usuario = TransferViajero::firstOrCreate(
-            ['email' => $validated['email']],
-            [
-                'nombre' => $validated['nombre'],
-                'direccion' => 'Dirección predeterminada',
-                'codigoPostal' => '00000',
-                'ciudad' => 'Ciudad predeterminada',
-                'pais' => 'País predeterminado',
-                'password' => bcrypt('password_predeterminado'),
-            ]
-        );
+    // Crear o buscar el usuario
+    $usuario = TransferViajero::firstOrCreate(
+        ['email' => $validated['email']],
+        [
+            'nombre' => $validated['nombre'],
+            'direccion' => 'Dirección predeterminada',
+            'codigoPostal' => '00000',
+            'ciudad' => 'Ciudad predeterminada',
+            'pais' => 'País predeterminado',
+            'password' => bcrypt('password_predeterminado'),
+        ]
+    );
 
-        // Determinar tipo de trayecto
-        $idTipoReserva = TransferTipoReserva::where('descripcion', $validated['trayecto'])->first()->id_tipo_reserva;
+    // Determinar tipo de trayecto
+    $idTipoReserva = TransferTipoReserva::where('descripcion', $validated['trayecto'])->first()->id_tipo_reserva;
 
+    try {
         // Crear la reserva
-        TransferReserva::create([
+        $reserva = TransferReserva::create([
             'localizador' => uniqid('LOC-'),
             'id_hotel' => $validated['hotelDestino'],
             'id_tipo_reserva' => $idTipoReserva,
@@ -80,16 +86,25 @@ class ReservationController extends Controller
             'id_destino' => $validated['idZona'],
             'num_viajeros' => $validated['numViajeros'],
             'id_vehiculo' => $validated['idVehiculo'],
-            'fecha_entrada' => $validated['diaLlegada'] ?? null,
-            'hora_entrada' => $validated['horaLlegada'] ?? null,
-            'numero_vuelo_entrada' => $validated['numeroVuelo'] ?? null,
-            'origen_vuelo_entrada' => $validated['aeropuertoOrigen'] ?? null,
-            'fecha_vuelo_salida' => $validated['diaVuelo'] ?? null,
-            'hora_vuelo_salida' => $validated['horaVuelo'] ?? null,
+            'fecha_entrada' => $validated['trayecto'] === 'Solo ida' ? $validated['diaLlegada'] : null,
+            'hora_entrada' => $validated['trayecto'] === 'Solo ida' ? $validated['horaLlegada'] : null,
+            'numero_vuelo_entrada' => $validated['trayecto'] === 'Solo ida' ? $validated['numeroVuelo'] : null,
+            'origen_vuelo_entrada' => $validated['trayecto'] === 'Solo ida' ? $validated['aeropuertoOrigen'] : null,
+            'fecha_vuelo_salida' => $validated['trayecto'] === 'Solo vuelta' ? $validated['diaVuelo'] : null,
+            'hora_vuelo_salida' => $validated['trayecto'] === 'Solo vuelta' ? $validated['horaVuelo'] : null,
+            'hora_recogida' => $validated['trayecto'] === 'Solo vuelta' ? $validated['horaRecogida'] : null,
         ]);
 
-        return redirect()->route('reservations.create')->with('success', 'Reserva creada correctamente.');
+        \Log::info('Reserva creada con éxito.', $reserva->toArray());
+    } catch (\Exception $e) {
+        \Log::error('Error al crear la reserva: ' . $e->getMessage());
+        return redirect()->back()->withErrors(['error' => 'No se pudo crear la reserva.']);
     }
+
+    return redirect()->route('reservations.create')->with('success', 'Reserva creada correctamente.');
+}
+
+
 
     public function adminDashboard()
 {
@@ -144,6 +159,12 @@ class ReservationController extends Controller
             'id_vehiculo' => 'required|integer|exists:transfer_vehiculo,id_vehiculo',
         ]);
         \Log::info("Datos validados: " . json_encode($validated));
+         // Validar tiempo mínimo de 48 horas
+        $fechaHora = strtotime($validated['fecha_entrada'] . ' ' . $validated['hora_entrada']);
+        if (($fechaHora - time()) < 48 * 3600) {
+            \Log::error('La reserva no cumple con el requisito de 48 horas de antelación.');
+            return redirect()->back()->withErrors(['error' => 'No se puede actualizar la reserva con menos de 48 horas de antelación.']);
+        }
         // Actualizar los datos en la reserva
         $reservation->fill($validated);
         $reservation->id_destino = $request->input('id_zona');
@@ -158,21 +179,35 @@ class ReservationController extends Controller
         return redirect()->route('admin.dashboard')->with('error', 'Ocurrió un error inesperado al actualizar la reserva.');
     }
 }
-    public function destroy($id)
-    {
-        try {
-            $reservation = TransferReserva::findOrFail($id);
-            $fechaEntrada = strtotime($reservation->fecha_entrada . ' ' . $reservation->hora_entrada);
-            if (($fechaEntrada - time()) < 48 * 3600) {
-                return redirect()->route('admin.dashboard')->with('error', 'No se puede eliminar la reserva con menos de 48 horas de antelación.');
-            }
-            $reservation->delete();
-            return redirect()->route('admin.dashboard')->with('success', 'Reserva eliminada correctamente.');
-        } catch (\Exception $e) {
-            \Log::error('Error al eliminar reserva: ' . $e->getMessage());
-            return redirect()->route('admin.dashboard')->with('error', 'Ocurrió un error al eliminar la reserva.');
+   public function destroy($id)
+{
+    try {
+        $reservation = TransferReserva::findOrFail($id);
+
+        // Validar que la fecha de entrada y hora de entrada no sean nulas
+        if (empty($reservation->fecha_entrada) || empty($reservation->hora_entrada)) {
+            \Log::warning('La reserva no tiene fecha de entrada u hora de entrada.', ['id_reserva' => $id]);
+            return redirect()->route('admin.dashboard')->with('error', 'No se puede eliminar la reserva porque falta información de fecha u hora de entrada.');
         }
+
+        // Validar la regla de las 48 horas
+        $fechaEntrada = strtotime($reservation->fecha_entrada . ' ' . $reservation->hora_entrada);
+        if (($fechaEntrada - time()) < 48 * 3600) {
+            return redirect()->route('admin.dashboard')->with('error', 'No se puede eliminar la reserva con menos de 48 horas de antelación.');
+        }
+
+        // Eliminar la reserva
+        $reservation->delete();
+        return redirect()->route('admin.dashboard')->with('success', 'Reserva eliminada correctamente.');
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        \Log::error('Reserva no encontrada para eliminación.', ['id_reserva' => $id]);
+        return redirect()->route('admin.dashboard')->with('error', 'La reserva no existe o ya ha sido eliminada.');
+    } catch (\Exception $e) {
+        \Log::error('Error al eliminar reserva: ' . $e->getMessage());
+        return redirect()->route('admin.dashboard')->with('error', 'Ocurrió un error al eliminar la reserva.');
     }
+}
+
     public function getTrayectos()
 { \Log::info('Inicio del método getTrayectos.');
 
@@ -225,6 +260,20 @@ public function storeFromHotel(Request $request)
     } catch (\Illuminate\Validation\ValidationException $e) {
         \Log::error('Error de validación: ' . json_encode($e->errors()));
         return redirect()->back()->withErrors($e->errors());
+    }
+     // Validar tiempo mínimo de 48 horas
+    if ($validated['trayecto'] === 'Solo ida') {
+        $fechaHora = strtotime($validated['diaLlegada'] . ' ' . $validated['horaLlegada']);
+    } elseif ($validated['trayecto'] === 'Solo vuelta') {
+        // Si se tratara de un trayecto "Solo vuelta", ajusta la validación aquí
+        $fechaHora = strtotime($validated['diaLlegada'] . ' ' . $validated['horaLlegada']); // Ajustar según el campo necesario
+    } else {
+        $fechaHora = null; // Para trayectos "Ida y vuelta" o similares, podrías manejarlo de forma distinta
+    }
+
+    if ($fechaHora && ($fechaHora - time()) < 48 * 3600) {
+        \Log::error('La reserva no cumple con el requisito de 48 horas de antelación.');
+        return redirect()->back()->withErrors(['error' => 'No se puede realizar la reserva con menos de 48 horas de antelación.']);
     }
 
     // Obtener el hotel autenticado

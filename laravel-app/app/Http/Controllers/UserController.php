@@ -472,7 +472,6 @@ public function hotelDashboard()
     if (!$hotelId) {
         \Log::error('No hay un hotel autenticado en la sesión.');
         return redirect()->route('hotel.login')->withErrors(['error' => 'Debes iniciar sesión antes de acceder al formulario.']);
-
     }
 
     // Obtener los datos del hotel
@@ -480,7 +479,7 @@ public function hotelDashboard()
 
     if (!$hotel) {
         \Log::error('El hotel no existe en la base de datos.', ['id' => $hotelId]);
-        return redirect()->route('hotel.login.form')->withErrors(['error' => 'El hotel no existe.']);
+        return redirect()->route('hotel.login')->withErrors(['error' => 'El hotel no existe.']);
     }
 
     // Obtener las reservas asociadas a este hotel
@@ -499,12 +498,16 @@ public function hotelDashboard()
             $reserva->precio = 0;
             $reserva->comision = 0;
         }
+
+        // Agregar propiedades para mostrar en la tabla
+        $reserva->fecha_entrada_mostrada = $reserva->fecha_entrada ?: 'N/A'; // Mostrar "N/A" si no existe
+        $reserva->fecha_salida_mostrada = $reserva->fecha_vuelo_salida ?: 'N/A'; // Mostrar "N/A" si no existe
     }
 
-    // Calcular las comisiones totales por mes
+    // Calcular las comisiones totales por mes basadas en la fecha de la reserva
     $comisionesPorMes = [];
     foreach ($reservas as $reserva) {
-        $mes = date('Y-m', strtotime($reserva->fecha_entrada)); // Formato "YYYY-MM"
+        $mes = date('Y-m', strtotime($reserva->fecha_reserva)); // Usar fecha_reserva para el cálculo
         if (!isset($comisionesPorMes[$mes])) {
             $comisionesPorMes[$mes] = [
                 'mes' => $mes,
@@ -517,6 +520,7 @@ public function hotelDashboard()
     // Retornar la vista con el hotel, las reservas, y las comisiones por mes
     return view('hotel.hotel_dashboard', compact('hotel', 'reservas', 'comisionesPorMes'));
 }
+
 
 
 

@@ -1,0 +1,150 @@
+/* Estilo general para el body */
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f9f9f9;
+    color: #333;
+    margin: 0;
+    padding: 0;
+}
+
+/* Contenedor principal de la página */
+.dashboard-container {
+    max-width: 900px;
+    margin: 40px auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    overflow-x: auto;
+}
+
+/* Título de bienvenida */
+.dashboard-container h2 {
+    color: #333;
+    font-size: 28px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Sección de reservas */
+.reservations-section {
+    margin-bottom: 40px;
+}
+
+.reservations-section h3 {
+    color: #333;
+    font-size: 24px;
+    border-bottom: 2px solid #007bff;
+    padding-bottom: 5px;
+    margin-bottom: 20px;
+}
+
+/* Estilo de tabla y contenedor */
+.reservations-section table {
+    width: 100%;
+    border-collapse: collapse;
+    overflow-x: auto;
+    display: block;
+}
+
+.reservations-section th,
+.reservations-section td {
+    padding: 15px;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+    word-wrap: break-word;
+    max-width: 200px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.reservations-section th {
+    background-color: #007bff;
+    color: white;
+}
+
+.reservations-section tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.reservations-section tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Opciones de navegación */
+.dashboard-options {
+    margin-top: 30px;
+}
+
+.dashboard-options ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.dashboard-options li {
+    margin: 15px 0;
+}
+
+.dashboard-options a,
+.dashboard-options button {
+    color: #007bff;
+    font-size: 18px;
+    text-decoration: none;
+    padding: 10px;
+    border-radius: 5px;
+    display: inline-block;
+    background-color: #f8f9fa;
+    width: 100%;
+    text-align: center;
+    transition: background-color 0.3s, color 0.3s;
+    border: none;
+    cursor: pointer;
+    font-family: 'Arial', sans-serif;
+}
+
+.dashboard-options a:hover,
+.dashboard-options button:hover {
+    background-color: #007bff;
+    color: white;
+}
+
+/* Estilo para la alerta de error si no hay reservas */
+.no-reservations {
+    background-color: #f8d7da;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 5px;
+    text-align: center;
+    margin-top: 20px;
+}
+
+/* Estilo de los botones dentro del contenedor general */
+.dashboard-container a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: bold;
+    transition: color 0.3s;
+}
+
+.dashboard-container a:hover {
+    color: #0056b3;
+}
+.dashboard-options form button {
+    width: 100%;
+    padding: 10px;
+    color: #007bff;
+    font-size: 18px;
+    text-align: center;
+    text-decoration: none;
+    background-color: #f8f9fa;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.dashboard-options form button:hover {
+    background-color: #007bff;
+    color: white;
+}
