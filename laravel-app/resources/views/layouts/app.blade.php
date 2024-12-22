@@ -28,6 +28,8 @@
     <link rel="stylesheet" href="{{ asset('css/edit_reservation.css') }}">
     @elseif (Request::is('reservations/create*') || Request::is('hotel/reservations/create*'))
     <link rel="stylesheet" href="{{ asset('css/make_form.css') }}">
+    @elseif (Request::is('register'))
+    <link rel="stylesheet" href="{{ asset('css/register.css') }}">
 @endif
 
 
