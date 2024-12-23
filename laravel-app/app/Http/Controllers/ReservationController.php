@@ -24,7 +24,7 @@ class ReservationController extends Controller
 }
 
 
-   // Procesar el formulario de reserva
+   // Procesar el formulario de reserva para admins y users
 public function store(Request $request)
 {
     \Log::info('Método store alcanzado.');
@@ -57,6 +57,7 @@ public function store(Request $request)
         if (($fechaHora - time()) < 48 * 3600) {
             return redirect()->back()->withErrors(['error' => 'No se puede realizar la reserva con menos de 48 horas de antelación.']);
         }
+        
     }
 
     // Crear o buscar el usuario
@@ -101,7 +102,12 @@ public function store(Request $request)
         return redirect()->back()->withErrors(['error' => 'No se pudo crear la reserva.']);
     }
 
-    return redirect()->route('reservations.create')->with('success', 'Reserva creada correctamente.');
+    // Redirección según el rol del usuario autenticado
+    if (Auth::user()->role === 'admin') {
+        return redirect()->route('admin.dashboard')->with('success', 'Reserva creada correctamente.');
+        } else { // Usuario particular
+        return redirect()->route('user.dashboard')->with('success', 'Reserva creada correctamente.');
+    }
 }
 
 

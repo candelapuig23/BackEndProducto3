@@ -37,13 +37,10 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 </head>
 <body>
-    <header style="text-align: center; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #ddd;">
-    @hasSection('header')
-        <h1 style="font-size: 2.5em; font-weight: bold; margin: 0;">@yield('header')</h1>
-    @else
-        <h1 style="font-size: 2em; font-weight: bold; margin: 0;">Isla Transfers</h1>
-    @endif
+    <header style="text-align: center; padding: 20px; background-color: #f8f9fa; border-bottom: 1px solid #ddd; margin-bottom: 20px;">
+    <h1 style="font-size: 2em; font-weight: bold; margin: 0;">Isla Transfers</h1>
 </header>
+
 
     <main>
         @yield('content')

@@ -1,37 +1,46 @@
 /* Estilo general */
+/* Ajuste global para evitar que todo el contenido quede centrado verticalmente */
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
     background-color: #f8f9fa;
-    display: flex;
-    justify-content: center;
-    align-items: center;
     min-height: 100vh;
 }
 
 /* Contenedor del formulario */
 .container {
+    margin: 20px auto;
+    /* Separación vertical desde el encabezado */
     background-color: white;
     padding: 20px 30px;
     border-radius: 8px;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     width: 100%;
     max-width: 500px;
+    text-align: center;
+    /* Centra el texto del formulario */
 }
 
-/* Título */
-h2 {
+/* Ajustes específicos para el título */
+.container h2 {
     text-align: center;
-    color: #333;
     margin-bottom: 20px;
+    /* Espacio debajo del título */
+    color: #333;
+    font-size: 24px;
+    font-weight: bold;
 }
 
 /* Estilos del formulario */
 form {
     display: flex;
     flex-direction: column;
+    align-items: stretch;
+    /* Asegura que los elementos ocupen todo el ancho */
 }
+
+/* Otros ajustes ya están correctos */
 
 /* Campos de entrada */
 form input,

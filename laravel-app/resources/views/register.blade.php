@@ -1,12 +1,8 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
-    <link rel="stylesheet" href="{{ asset('resources/css/style.css') }}">
-</head>
-<body>
+@extends('layouts.app')
+
+@section('title', 'Registro')
+
+@section('content')
 <div class="container">
     <h2>Registro de Usuario</h2>
     <form action="{{ route('register') }}" method="POST">
@@ -35,5 +31,4 @@
         </div>
     </form>
 </div>
-</body>
-</html>
+@endsection

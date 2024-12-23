@@ -33,7 +33,7 @@ Route::put('/profile/update/{id}', [UserController::class, 'updateProfile'])->mi
 // Ruta para cerrar sesión
 Route::post('/logout', function () {
     Auth::logout();
-    return redirect('/login');
+    return redirect('/'); // Redirige a la página de inicio
 })->name('logout');
 
 // Panel de usuario
