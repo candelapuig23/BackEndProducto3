@@ -5,9 +5,14 @@
     <h2>Registrar Nuevo Hotel</h2>
     <form action="{{ route('register.hotel.post') }}" method="POST">
         @csrf
-        <div>
-            <label for="id_zona">ID de Zona:</label>
-            <input type="number" name="id_zona" placeholder="Zona" required>
+         <div>
+            <label for="id_zona">Zona:</label>
+            <select name="id_zona" required>
+                <option value="">Seleccione una zona</option>
+                @foreach ($zonas as $zona)
+                    <option value="{{ $zona->id_zona }}">{{ $zona->descripcion }}</option>
+                @endforeach
+            </select>
         </div>
         <div>
             <label for="comision">Comisión (%):</label>

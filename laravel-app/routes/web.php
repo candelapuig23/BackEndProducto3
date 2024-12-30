@@ -7,15 +7,16 @@ use App\Http\Controllers\ReservationController;
 // Login y registro de usuarios
 Route::get('/login', [UserController::class, 'showLoginForm'])->name('login');
 Route::post('/login', [UserController::class, 'login']);
-Route::get('/register', [UserController::class, 'showRegisterForm'])->name('register');
-Route::post('/register', [UserController::class, 'register'])->name('register');
+Route::get('/register', [UserController::class, 'showRegisterForm'])->name('register.form');
+Route::post('/register', [UserController::class, 'register'])->name('register.post');
 
 // Panel de administrador
 Route::get('/admin/dashboard', [UserController::class, 'adminDashboard'])->name('admin.dashboard');
 
 // Funcionalidades de reservas en el panel de administrador
 Route::get('/reservations/create', [ReservationController::class, 'create'])->name('reservations.create');
-Route::post('/reservations/store', [ReservationController::class, 'store'])->name('reservations.store');
+Route::post('/reservations/store', [ReservationController::class, 'store'])
+    ->name('reservations.store');
 Route::get('/reservations/{id}/edit', [ReservationController::class, 'edit'])->name('reservations.edit'); // Edición de reservas
 Route::put('/reservations/{id}', [ReservationController::class, 'update'])->name('reservations.update'); // Actualización de reservas
 Route::delete('/reservations/{id}', [ReservationController::class, 'destroy'])->name('reservations.destroy'); // Eliminación de reservas
@@ -76,9 +77,8 @@ Route::get('/hotel/reservations/create', [ReservationController::class, 'createF
 
 
 // Ruta para almacenar la reserva desde el panel de hoteles
-Route::post('/hotel/reservations/store', function () {
-    \Log::info('La ruta hotel.reservations.store fue alcanzada.');
-});
+Route::post('/hotel/reservations/store', [ReservationController::class, 'storeFromHotel'])
+    ->name('hotel.reservations.store');
 
 // Ruta para ejecutar el método setPrecios en UserController
 Route::get('/admin/set-precios', [UserController::class, 'setPrecios'])->name('admin.setPrecios');

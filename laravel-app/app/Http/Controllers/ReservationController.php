@@ -103,11 +103,16 @@ public function store(Request $request)
     }
 
     // Redirección según el rol del usuario autenticado
-    if (Auth::user()->role === 'admin') {
-        return redirect()->route('admin.dashboard')->with('success', 'Reserva creada correctamente.');
-        } else { // Usuario particular
-        return redirect()->route('user.dashboard')->with('success', 'Reserva creada correctamente.');
-    }
+if (Auth::user() instanceof \App\Models\TransferHotel) {
+    return redirect()->route('hotel.dashboard')->with('error', 'Acción no permitida desde esta cuenta.');
+}
+
+if (Auth::user()->role === 'admin') {
+    return redirect()->route('admin.dashboard')->with('success', 'Reserva creada correctamente.');
+} else {
+    return redirect()->route('user.dashboard')->with('success', 'Reserva creada correctamente.');
+}
+
 }
 
 
@@ -214,6 +219,7 @@ public function store(Request $request)
     }
 }
 
+//método que obtiene un listado de trayectos (reservas) con información de sus zonas asociadas y los devuelve en formato JSON
     public function getTrayectos()
 { \Log::info('Inicio del método getTrayectos.');
 
@@ -244,7 +250,6 @@ public function createFromHotel()
     return view('reservations.make', compact('tiposTrayecto', 'vehiculos', 'zonas', 'hoteles', 'hotel'));
 }
 
-//metodo para la creacion de reservas HECHAS POR HOTELES
 public function storeFromHotel(Request $request)
 {
     \Log::info('Inicio del método storeFromHotel.');
@@ -262,19 +267,18 @@ public function storeFromHotel(Request $request)
             'email' => 'required|email',
             'nombre' => 'required|string',
         ]);
-        \Log::info('Validación completada con éxito');
+        \Log::info('Validación completada con éxito.');
     } catch (\Illuminate\Validation\ValidationException $e) {
         \Log::error('Error de validación: ' . json_encode($e->errors()));
         return redirect()->back()->withErrors($e->errors());
     }
-     // Validar tiempo mínimo de 48 horas
+
+    // Validar tiempo mínimo de 48 horas
+    $fechaHora = null;
     if ($validated['trayecto'] === 'Solo ida') {
         $fechaHora = strtotime($validated['diaLlegada'] . ' ' . $validated['horaLlegada']);
     } elseif ($validated['trayecto'] === 'Solo vuelta') {
-        // Si se tratara de un trayecto "Solo vuelta", ajusta la validación aquí
-        $fechaHora = strtotime($validated['diaLlegada'] . ' ' . $validated['horaLlegada']); // Ajustar según el campo necesario
-    } else {
-        $fechaHora = null; // Para trayectos "Ida y vuelta" o similares, podrías manejarlo de forma distinta
+        $fechaHora = strtotime($validated['diaLlegada'] . ' ' . $validated['horaLlegada']);
     }
 
     if ($fechaHora && ($fechaHora - time()) < 48 * 3600) {
@@ -282,33 +286,21 @@ public function storeFromHotel(Request $request)
         return redirect()->back()->withErrors(['error' => 'No se puede realizar la reserva con menos de 48 horas de antelación.']);
     }
 
-    // Obtener el hotel autenticado
-    $hotel = Auth::user();
+    // Obtener el hotel autenticado desde la sesión
+    $hotelId = session('hotel_id'); // Asegúrate de que el hotel_id esté configurado en la sesión
+    $hotel = TransferHotel::find($hotelId);
 
-    // Verificar que el hotel tiene un id_hotel válido
+    // Verificar que el hotel existe y tiene un id_hotel válido
     if (!$hotel || !$hotel->id_hotel) {
-        \Log::error('El hotel no está autenticado o no tiene un id_hotel válido.');
+        \Log::error('El hotel no está autenticado o no tiene un id_hotel válido.', ['hotel_id' => $hotelId]);
         return redirect()->route('hotel.login')->withErrors(['error' => 'Debes iniciar sesión como hotel.']);
     }
 
     // Obtener el tipo de reserva
     $idTipoReserva = TransferTipoReserva::where('descripcion', $validated['trayecto'])->first()->id_tipo_reserva;
 
-    // Crear la reserva en la base de datos con manejo de errores
+    // Crear la reserva en la base de datos
     try {
-        \Log::info('Datos a guardar en la reserva:', [
-            'localizador' => uniqid('LOC-'),
-            'id_hotel' => $hotel->id_hotel,
-            'id_tipo_reserva' => $idTipoReserva,
-            'email_cliente' => $validated['email'],
-            'fecha_reserva' => now(),
-            'id_destino' => $validated['idZona'],
-            'num_viajeros' => $validated['numViajeros'],
-            'id_vehiculo' => $validated['idVehiculo'],
-            'fecha_entrada' => $validated['diaLlegada'] ?? null,
-            'hora_entrada' => $validated['horaLlegada'] ?? null,
-        ]);
-
         $reserva = TransferReserva::create([
             'localizador' => uniqid('LOC-'),
             'id_hotel' => $hotel->id_hotel,
@@ -325,12 +317,13 @@ public function storeFromHotel(Request $request)
         \Log::info('Reserva creada con éxito:', ['reserva' => $reserva]);
     } catch (\Exception $e) {
         \Log::error('Error al crear la reserva: ' . $e->getMessage());
-        return redirect()->back()->with('error', 'Ocurrió un error al crear la reserva');
+        return redirect()->back()->withErrors(['error' => 'Ocurrió un error al crear la reserva.']);
     }
 
     // Redirigir al panel del hotel con mensaje de éxito
     return redirect()->route('hotel.dashboard')->with('success', 'Reserva creada correctamente.');
 }
+
 
 public function getReservasPorZonas()
 {

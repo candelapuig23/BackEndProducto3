@@ -294,7 +294,6 @@ public function userDashboard()
 
     return view('user_dashboard', compact('user', 'reservations'));
 }
-//metodo para mostrar la informacion de las reservas en el panel de admin
 public function adminDashboard()
 {
     // Obtener las reservas generales con las relaciones necesarias
@@ -315,6 +314,14 @@ public function adminDashboard()
 
     foreach ($hoteles as $hotel) {
         $totalComision = 0;
+
+        // Asegurar que siempre exista un array para 'reservas', incluso si está vacío
+        $reservasPorHotel[$hotel->id_hotel] = [
+            'reservas' => [],
+            'total_comision' => 0,
+            'nombre_hotel' => $hotel->usuario,
+        ];
+
         $reservas = $hotel->reservas;
 
         foreach ($reservas as $reserva) {
@@ -337,7 +344,6 @@ public function adminDashboard()
         }
 
         $reservasPorHotel[$hotel->id_hotel]['total_comision'] = $totalComision;
-        $reservasPorHotel[$hotel->id_hotel]['nombre_hotel'] = $hotel->usuario;
     }
 
     // Combinar ambas funcionalidades en la vista
@@ -372,11 +378,15 @@ public function getTrayectos(Request $request)
 }
 
 //METODOS PARA LOS HOTELES
-// Mostrar el formulario de registro de hoteles des de panel admin
 public function showRegisterHotelForm()
 {
-    return view('register_hotel'); // Asegúrate de tener esta vista en resources/views
+    // Obtener las zonas disponibles
+    $zonas = \App\Models\TransferZona::all();
+
+    // Retornar la vista con las zonas
+    return view('register_hotel', ['zonas' => $zonas]);
 }
+
 
 // Registrar un nuevo hotel des de panel admin
 public function registerHotel(Request $request)
@@ -390,15 +400,44 @@ public function registerHotel(Request $request)
     ]);
 
     // Crear un nuevo hotel
-    TransferHotel::create([
+    $hotel = TransferHotel::create([
         'id_zona' => $validated['id_zona'],
         'comision' => $validated['comision'],
         'usuario' => $validated['usuario'],
         'password' => Hash::make($validated['password']),
     ]);
 
+    // Asignar precios automáticamente al nuevo hotel
+    $this->assignPreciosToHotel($hotel);
+
     return redirect()->route('admin.dashboard')->with('success', 'Hotel registrado correctamente.');
 }
+
+// Método para asignar precios a un hotel recién creado
+protected function assignPreciosToHotel(TransferHotel $hotel)
+{
+    $precioFijo = 50; // Precio fijo que se asignará a todas las combinaciones
+
+    // Obtener todos los vehículos
+    $vehiculos = \App\Models\TransferVehiculo::all();
+
+    foreach ($vehiculos as $vehiculo) {
+        // Comprobar si ya existe un precio para esta combinación
+        $existePrecio = \App\Models\TransferPrecios::where('id_hotel', $hotel->id_hotel)
+            ->where('id_vehiculo', $vehiculo->id_vehiculo)
+            ->first();
+
+        if (!$existePrecio) {
+            // Crear un nuevo precio si no existe
+            \App\Models\TransferPrecios::create([
+                'id_hotel' => $hotel->id_hotel,
+                'id_vehiculo' => $vehiculo->id_vehiculo,
+                'precio' => $precioFijo,
+            ]);
+        }
+    }
+}
+
 
 public function showHotelLoginForm()
 {

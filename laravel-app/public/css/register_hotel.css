@@ -1,4 +1,4 @@
-/* Contenedor principal */
+/* Estilo general del contenedor */
 .container {
     width: 50%;
     margin: 0 auto;
@@ -9,7 +9,7 @@
     font-family: Arial, sans-serif;
 }
 
-/* Título de la página */
+/* Título */
 h2 {
     text-align: center;
     margin-bottom: 20px;
@@ -17,7 +17,7 @@ h2 {
     color: #333;
 }
 
-/* Etiquetas de los campos */
+/* Estilo para etiquetas */
 label {
     display: block;
     margin-top: 15px;
@@ -25,11 +25,12 @@ label {
     color: #333;
 }
 
-/* Campos de entrada */
+/* Estilo general para los campos de entrada */
 input[type="text"],
 input[type="email"],
 input[type="password"],
-input[type="number"] {
+input[type="number"],
+select {
     width: 100%;
     padding: 10px;
     margin-top: 5px;
@@ -37,9 +38,35 @@ input[type="number"] {
     border-radius: 4px;
     font-size: 14px;
     box-sizing: border-box;
+    appearance: none;
+    -moz-appearance: none;
+    -webkit-appearance: none;
+    background-color: #fff;
 }
 
-/* Botón de registro */
+/* Estilo para el desplegable */
+select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+    background-color: #fff;
+    color: #333;
+}
+
+/* Estilo para el estado de enfoque */
+select:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+
+
+/* Estilo para el botón */
 button[type="submit"] {
     width: 100%;
     padding: 12px;

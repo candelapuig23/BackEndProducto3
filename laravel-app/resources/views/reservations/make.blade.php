@@ -13,14 +13,23 @@
         </div>
     @endif
 
-    @if (Auth::user() instanceof App\Models\TransferHotel)
-    <form action="{{ route('hotel.reservations.store') }}" method="POST" id="reservationForm">
-@else
-    <form action="{{ route('reservations.store') }}" method="POST" id="reservationForm">
-@endif
+    @php
+        // Determina si el usuario autenticado es un hotel basado en la sesión
+        $isHotel = session('hotel_id') ? true : false;
+    @endphp
 
+    <!-- Formulario -->
+    @if ($isHotel)
+        <!-- Formulario para hoteles -->
+        <form action="{{ route('hotel.reservations.store') }}" method="POST" id="reservationForm">
+        <input type="hidden" name="hotelDestino" value="{{ session('hotel_id') }}">
+    @else
+        <!-- Formulario para usuarios normales -->
+        <form action="{{ route('reservations.store') }}" method="POST" id="reservationForm">
+    @endif
         @csrf
         <h2>Formulario de Reserva de Traslado</h2>
+
         <!-- Tipo de Trayecto -->
         <label for="trayecto">Tipo de Trayecto:</label>
         <select name="trayecto" id="trayecto" onchange="mostrarCamposTrayecto()" required>
@@ -29,6 +38,7 @@
                 <option value="{{ $tipo->descripcion }}">{{ ucfirst($tipo->descripcion) }}</option>
             @endforeach
         </select>
+
         <!-- Campos dinámicos según el trayecto -->
         <div id="aeropuertoHotelFields" style="display:none;">
             <h3>Trayecto: Aeropuerto a Hotel</h3>
@@ -50,6 +60,7 @@
             <label for="horaRecogida">Hora de recogida:</label>
             <input type="time" id="horaRecogida" name="horaRecogida">
         </div>
+
         <!-- Selección de Zona -->
         <label for="idZona">Seleccione una Zona:</label>
         <select id="idZona" name="idZona" required>
@@ -58,6 +69,7 @@
                 <option value="{{ $zona->id_zona }}">{{ $zona->descripcion }}</option>
             @endforeach
         </select>
+
         <!-- Selección de Vehículo -->
         <label for="idVehiculo">Seleccione un Vehículo:</label>
         <select id="idVehiculo" name="idVehiculo" required>
@@ -66,35 +78,35 @@
                 <option value="{{ $vehiculo->id_vehiculo }}">{{ ucfirst($vehiculo->descripcion) }}</option>
             @endforeach
         </select>
+
         <!-- Selección de Hotel -->
-@if (Auth::user() instanceof App\Models\TransferHotel)
-    <!-- Campo oculto si el usuario autenticado es un hotel -->
-    <input type="hidden" name="hotelDestino" value="{{ Auth::user()->id_hotel }}">
-@else
-    <!-- Selección manual del hotel para admin o particulares -->
-    <label for="hotelDestino">Hotel de destino/recogida:</label>
-    <select name="hotelDestino" id="hotelDestino" required>
-        <option value="">Seleccione un hotel</option>
-        @foreach($hoteles as $hotel)
-            <option value="{{ $hotel->id_hotel }}">{{ ucfirst($hotel->usuario) }}</option>
-        @endforeach
-    </select>
-@endif
+        @if (!$isHotel)
+            <!-- Mostrar selección manual de hotel solo para usuarios normales -->
+            <label for="hotelDestino">Hotel de destino/recogida:</label>
+            <select name="hotelDestino" id="hotelDestino" required>
+                <option value="">Seleccione un hotel</option>
+                @foreach($hoteles as $hotel)
+                    <option value="{{ $hotel->id_hotel }}">{{ ucfirst($hotel->usuario) }}</option>
+                @endforeach
+            </select>
+        @endif
+
         <!-- Número de Viajeros -->
         <label for="numViajeros">Número de viajeros:</label>
         <input type="number" id="numViajeros" name="numViajeros" min="1" required>
+
         <!-- Datos del Cliente -->
-       <!-- Datos del Cliente -->
-<h3>Datos del Cliente</h3>
-<label for="email">Correo electrónico:</label>
-<input type="email" id="email" name="email" value="{{ Auth::check() ? Auth::user()->email : '' }}" required>
-<label for="nombre">Nombre completo:</label>
-<input type="text" id="nombre" name="nombre" value="{{ Auth::check() ? Auth::user()->nombre : '' }}" required>
+        <h3>Datos del Cliente</h3>
+        <label for="email">Correo electrónico:</label>
+        <input type="email" id="email" name="email" value="{{ Auth::check() ? Auth::user()->email : '' }}" required>
+        <label for="nombre">Nombre completo:</label>
+        <input type="text" id="nombre" name="nombre" value="{{ Auth::check() ? Auth::user()->nombre : '' }}" required>
 
         <!-- Botón de Envío -->
         <button type="submit">Realizar reserva</button>
     </form>
 </div>
+
 <script>
     function mostrarCamposTrayecto() {
         const trayecto = document.getElementById("trayecto").value;
